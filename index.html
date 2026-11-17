@@ -1,0 +1,2780 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Antigravity Cube: Big Four AI Learner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Orbitron:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #030613;
+      --bg-mid: #081028;
+      --glass-bg: rgba(10, 17, 38, 0.62);
+      --glass-bg-strong: rgba(8, 14, 32, 0.80);
+      --glass-border: rgba(56, 189, 248, 0.22);
+      --glass-border-hover: rgba(34, 211, 238, 0.55);
+      --neon-cyan: #00f0ff;
+      --neon-sky: #38bdf8;
+      --neon-purple: #a855f7;
+      --neon-pink: #ec4899;
+      --neon-emerald: #10b981;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-display: 'Orbitron', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 42%, #0d193a 0%, #050a1c 52%, #02040c 100%);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      user-select: none;
+    }
+
+    #canvas-container {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      cursor: grab;
+    }
+    #canvas-container:active {
+      cursor: grabbing;
+    }
+
+    /* Subtle cosmic ambient vignette */
+    .space-vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(0, 240, 255, 0.07) 0%, transparent 40%),
+        radial-gradient(circle at 82% 75%, rgba(168, 85, 247, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at center, transparent 58%, rgba(2, 4, 12, 0.65) 100%);
+    }
+
+    /* Glassmorphism utility */
+    .glass-panel {
+      background: var(--glass-bg);
+      backdrop-filter: blur(18px) saturate(150%);
+      -webkit-backdrop-filter: blur(18px) saturate(150%);
+      border: 1px solid var(--glass-border);
+      box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+    }
+
+    /* HUD Layout Overlay */
+    .hud-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 14px 18px;
+      gap: 12px;
+    }
+    .hud-layer > header,
+    .hud-layer > footer {
+      pointer-events: auto;
+    }
+
+    /* Top Header Bar */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 10px 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .brand-orb {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(168, 85, 247, 0.35));
+      border: 1px solid rgba(0, 240, 255, 0.55);
+      box-shadow: 0 0 18px rgba(0, 240, 255, 0.35);
+      display: grid;
+      place-items: center;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--neon-cyan);
+      letter-spacing: 0.5px;
+    }
+
+    .brand-text h1 {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      background: linear-gradient(90deg, #ffffff 0%, #38bdf8 60%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.15;
+    }
+    .brand-text span {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.4px;
+      display: block;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* Controls & Buttons */
+    .select-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .select-wrap label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-right: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    select.neon-select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: rgba(15, 23, 42, 0.85);
+      color: #fff;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 10px;
+      padding: 7px 32px 7px 12px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2300f0ff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+    select.neon-select:hover, select.neon-select:focus {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 14px rgba(0, 240, 255, 0.25);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 13px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      background: rgba(15, 23, 42, 0.72);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+    .btn:hover:not(:disabled) {
+      border-color: var(--neon-cyan);
+      background: rgba(0, 240, 255, 0.12);
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.22);
+      transform: translateY(-1px);
+    }
+    .btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+    .btn:disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.24), rgba(59, 130, 246, 0.28));
+      border-color: rgba(0, 240, 255, 0.6);
+      color: #ffffff;
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.18);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.38), rgba(59, 130, 246, 0.42));
+      box-shadow: 0 0 22px rgba(0, 240, 255, 0.38);
+    }
+
+    .btn-accent {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(236, 72, 153, 0.25));
+      border-color: rgba(192, 132, 252, 0.55);
+    }
+    .btn-accent:hover:not(:disabled) {
+      border-color: var(--neon-pink);
+      box-shadow: 0 0 18px rgba(192, 132, 252, 0.35);
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(236, 72, 153, 0.35));
+    }
+
+    .btn.active {
+      border-color: var(--neon-cyan);
+      background: rgba(0, 240, 255, 0.18);
+      color: var(--neon-cyan);
+      box-shadow: 0 0 14px rgba(0, 240, 255, 0.28);
+    }
+
+    /* Middle Area: Left AI Explanation HUD + Right Compact Timeline/Pipeline */
+    .mid-grid {
+      flex: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      pointer-events: none;
+      min-height: 0;
+    }
+
+    .ai-hud {
+      pointer-events: auto;
+      width: 345px;
+      max-width: 100%;
+      padding: 15px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .hud-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .phase-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: var(--neon-cyan);
+      background: rgba(0, 240, 255, 0.12);
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+    .phase-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--neon-cyan);
+      box-shadow: 0 0 8px var(--neon-cyan);
+      animation: pulseDot 1.6s infinite ease-in-out;
+    }
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(0.85); opacity: 0.7; }
+      50% { transform: scale(1.25); opacity: 1; }
+    }
+
+    .step-counter {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .stage-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.3;
+    }
+
+    .move-showcase {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(2, 6, 23, 0.65);
+      border: 1px solid rgba(56, 189, 248, 0.22);
+      border-radius: 12px;
+      padding: 9px 12px;
+    }
+
+    .active-move-chip {
+      min-width: 52px;
+      height: 38px;
+      padding: 0 10px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.22), rgba(168, 85, 247, 0.22));
+      border: 1px solid var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.28);
+      display: grid;
+      place-items: center;
+      font-family: var(--font-mono);
+      font-size: 17px;
+      font-weight: 700;
+      color: #ffffff;
+      flex-shrink: 0;
+    }
+
+    .move-seq-stream {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.4;
+      max-height: 54px;
+      overflow-y: auto;
+    }
+    .seq-tok {
+      padding: 2px 5px;
+      border-radius: 5px;
+      color: var(--text-muted);
+      background: rgba(148, 163, 184, 0.08);
+      transition: all 0.15s;
+    }
+    .seq-tok.done {
+      color: rgba(148, 163, 184, 0.45);
+      text-decoration: line-through;
+    }
+    .seq-tok.current {
+      color: #020617;
+      background: var(--neon-cyan);
+      font-weight: 700;
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+    }
+
+    .ai-explanation {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #cbd5e1;
+      background: rgba(15, 23, 42, 0.45);
+      border-left: 3px solid var(--neon-purple);
+      padding: 8px 10px;
+      border-radius: 0 10px 10px 0;
+    }
+
+    .target-legend {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .target-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .target-chip {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      color: var(--neon-cyan);
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.16);
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+      box-shadow: 0 0 10px var(--neon-cyan);
+      transition: width 0.25s ease;
+    }
+
+    /* Right Panel: Big Four Pipeline / Step List */
+    .pipeline-hud {
+      pointer-events: auto;
+      width: 285px;
+      max-height: 100%;
+      padding: 13px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+    .pipeline-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: #e2e8f0;
+    }
+    .pipeline-stats {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--neon-cyan);
+    }
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow-y: auto;
+      max-height: 310px;
+      padding-right: 4px;
+    }
+    .step-list::-webkit-scrollbar,
+    .move-seq-stream::-webkit-scrollbar {
+      width: 4px;
+    }
+    .step-list::-webkit-scrollbar-thumb,
+    .move-seq-stream::-webkit-scrollbar-thumb {
+      background: rgba(56, 189, 248, 0.35);
+      border-radius: 4px;
+    }
+
+    .step-item {
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.55);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .step-item:hover {
+      border-color: rgba(56, 189, 248, 0.45);
+      background: rgba(30, 41, 59, 0.68);
+    }
+    .step-item.active {
+      border-color: var(--neon-cyan);
+      background: rgba(0, 240, 255, 0.12);
+      box-shadow: 0 0 14px rgba(0, 240, 255, 0.18);
+    }
+    .step-item.completed {
+      border-color: rgba(16, 185, 129, 0.35);
+      opacity: 0.72;
+    }
+    .step-item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+    .step-item-phase {
+      font-size: 10px;
+      color: var(--neon-sky);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .step-item-moves {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 3px;
+      word-break: break-word;
+    }
+
+    .scramble-banner {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: #94a3b8;
+      background: rgba(2, 6, 23, 0.55);
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      line-height: 1.4;
+    }
+    .scramble-banner b {
+      color: var(--neon-sky);
+    }
+
+    /* Bottom Dock: Playback + Speed + Virtual Keyboard */
+    .bottom-dock {
+      padding: 11px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .playback-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .playback-buttons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .speed-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .speed-control input[type="range"] {
+      -webkit-appearance: none;
+      width: 150px;
+      height: 5px;
+      background: rgba(148, 163, 184, 0.25);
+      border-radius: 999px;
+      outline: none;
+      cursor: pointer;
+    }
+    .speed-control input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--neon-cyan);
+      box-shadow: 0 0 10px var(--neon-cyan);
+      cursor: pointer;
+      border: 2px solid #0f172a;
+    }
+    .speed-val {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--neon-cyan);
+      min-width: 108px;
+    }
+
+    /* Virtual Keyboard */
+    .vkeys-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .vkeys-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .modifier-group {
+      display: inline-flex;
+      gap: 4px;
+    }
+    .mod-btn {
+      padding: 4px 9px;
+      border-radius: 7px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(15, 23, 42, 0.8);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .mod-btn.active {
+      border-color: var(--neon-purple);
+      background: rgba(168, 85, 247, 0.25);
+      color: #fff;
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.35);
+    }
+
+    .vkeys-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .vkey {
+      min-width: 38px;
+      height: 34px;
+      padding: 0 9px;
+      border-radius: 9px;
+      border: 1px solid rgba(56, 189, 248, 0.32);
+      background: rgba(15, 23, 42, 0.78);
+      color: #e2e8f0;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.14s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .vkey:hover:not(:disabled) {
+      border-color: var(--neon-cyan);
+      color: var(--neon-cyan);
+      background: rgba(0, 240, 255, 0.14);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.26);
+      transform: translateY(-1px);
+    }
+    .vkey:active:not(:disabled) {
+      transform: scale(0.95);
+    }
+    .vkey.slice-key {
+      border-color: rgba(192, 132, 252, 0.35);
+      color: #e9d5ff;
+    }
+    .vkey.slice-key:hover:not(:disabled) {
+      border-color: var(--neon-purple);
+      color: #fff;
+      background: rgba(168, 85, 247, 0.22);
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.35);
+    }
+
+    /* Mobile Collapsible Timeline Toggle */
+    .mobile-only { display: none; }
+
+    /* Responsive adjustments */
+    @media (max-width: 960px) {
+      .pipeline-hud {
+        display: none;
+      }
+      .pipeline-hud.mobile-open {
+        display: flex;
+        position: fixed;
+        right: 14px;
+        top: 76px;
+        bottom: 165px;
+        z-index: 30;
+        width: min(310px, calc(100vw - 28px));
+      }
+      .mobile-only {
+        display: inline-flex;
+      }
+      .ai-hud {
+        width: 310px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .hud-layer {
+        padding: 8px 10px;
+        gap: 8px;
+      }
+      .top-bar {
+        padding: 8px 10px;
+      }
+      .brand-text h1 {
+        font-size: 13px;
+      }
+      .brand-text span {
+        display: none;
+      }
+      .ai-hud {
+        width: 100%;
+        padding: 10px 12px;
+        gap: 7px;
+      }
+      .stage-title {
+        font-size: 13.5px;
+      }
+      .ai-explanation {
+        font-size: 11.5px;
+        padding: 6px 8px;
+      }
+      .bottom-dock {
+        padding: 9px 10px;
+        gap: 8px;
+      }
+      .speed-control input[type="range"] {
+        width: 105px;
+      }
+      .vkey {
+        min-width: 33px;
+        height: 31px;
+        font-size: 12px;
+        padding: 0 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div class="space-vignette"></div>
+
+  <div class="hud-layer">
+    <!-- TOP BAR -->
+    <header class="glass-panel top-bar">
+      <div class="brand">
+        <div class="brand-orb">AG</div>
+        <div class="brand-text">
+          <h1>ANTIGRAVITY CUBE</h1>
+          <span>Big Four AI Learner · Zero-Gravity 3D</span>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <div class="select-wrap">
+          <label for="method-select">Phương pháp</label>
+          <select id="method-select" class="neon-select">
+            <option value="CFOP">CFOP (Fridrich)</option>
+            <option value="Roux">Roux (Blockbuilding)</option>
+            <option value="ZZ">ZZ (EOLine + RUL)</option>
+            <option value="Petrus">Petrus (2x2x2 → 2x2x3)</option>
+          </select>
+        </div>
+
+        <button id="btn-scramble" class="btn btn-accent" title="Tạo 20 nước đi xáo trộn ngẫu nhiên">
+          ⚡ Scramble (Xáo trộn)
+        </button>
+        <button id="btn-reset-cam" class="btn" title="Đặt lại góc nhìn camera mặc định">
+          🎯 Reset Góc nhìn
+        </button>
+        <button id="btn-auto-rotate" class="btn" title="Bật/tắt tự động xoay camera">
+          🔄 Auto-Rotate
+        </button>
+        <button id="btn-toggle-pipeline" class="btn mobile-only" title="Xem danh sách các bước giải">
+          📋 Lộ trình
+        </button>
+      </div>
+    </header>
+
+    <!-- MIDDLE HUD PANELS -->
+    <main class="mid-grid">
+      <!-- HUD AI EXPLANATION -->
+      <section class="glass-panel ai-hud" aria-label="AI Pedagogical HUD">
+        <div class="hud-header-row">
+          <span class="phase-badge">
+            <span class="phase-dot"></span>
+            <span id="hud-phase">Sẵn sàng</span>
+          </span>
+          <span class="step-counter" id="hud-counter">Move 0 / 0</span>
+        </div>
+
+        <div class="stage-title" id="hud-title">Khối Rubik đang ở trạng thái hoàn chỉnh</div>
+
+        <div class="move-showcase">
+          <div class="active-move-chip" id="hud-current-move">—</div>
+          <div class="move-seq-stream" id="hud-move-seq">
+            <span class="seq-tok">Nhấn Scramble để bắt đầu</span>
+          </div>
+        </div>
+
+        <div class="ai-explanation" id="hud-explanation">
+          Chọn một phương pháp trong <b>Big Four (CFOP, Roux, ZZ, Petrus)</b> rồi nhấn <b>Scramble</b> hoặc tự xoay trên bàn phím ảo để AI phân tích và giảng giải từng bước.
+        </div>
+
+        <div class="target-legend">
+          <span>Viên mục tiêu (Neon):</span>
+          <div class="target-chips" id="hud-targets">
+            <span class="target-chip">Không có</span>
+          </div>
+        </div>
+
+        <div class="progress-track">
+          <div class="progress-fill" id="hud-progress"></div>
+        </div>
+      </section>
+
+      <!-- RIGHT PIPELINE TIMELINE -->
+      <aside class="glass-panel pipeline-hud" id="pipeline-panel" aria-label="Lộ trình Big Four">
+        <div class="pipeline-header">
+          <span id="pipeline-method-name">Lộ trình CFOP</span>
+          <span class="pipeline-stats" id="pipeline-stats">0 moves</span>
+        </div>
+        <div class="scramble-banner" id="scramble-display">
+          <b>Scramble:</b> Chưa xáo trộn
+        </div>
+        <div class="step-list" id="step-list"></div>
+      </aside>
+    </main>
+
+    <!-- BOTTOM CONTROL DOCK -->
+    <footer class="glass-panel bottom-dock">
+      <div class="playback-row">
+        <div class="playback-buttons">
+          <button id="btn-prev" class="btn" disabled title="Lùi 1 bước (Prev Step)">⏮ Prev Step</button>
+          <button id="btn-play" class="btn btn-primary" title="Tự động giải / Tạm dừng">▶ Play / Pause</button>
+          <button id="btn-next" class="btn" disabled title="Tiến 1 bước (Next Step)">Next Step ⏭</button>
+          <button id="btn-solve-analyze" class="btn" title="Phân tích lại lời giải AI từ trạng thái hiện tại">🧠 Phân tích AI</button>
+          <button id="btn-reset-cube" class="btn" title="Đưa khối Rubik về trạng thái đã giải">✨ Solved</button>
+        </div>
+
+        <div class="speed-control">
+          <span>Tốc độ:</span>
+          <input type="range" id="speed-slider" min="100" max="1500" step="50" value="500" />
+          <span class="speed-val" id="speed-label">500ms (1.0x)</span>
+        </div>
+      </div>
+
+      <div class="vkeys-row">
+        <div class="vkeys-label">
+          <span>Bàn phím ảo</span>
+          <div class="modifier-group">
+            <button class="mod-btn active" data-mod="" title="Xoay 90° thuận chiều kim đồng hồ">CW</button>
+            <button class="mod-btn" data-mod="'" title="Xoay 90° ngược chiều (Prime ')">' (Ngược)</button>
+            <button class="mod-btn" data-mod="2" title="Xoay 180° (Double 2)">2 (180°)</button>
+          </div>
+        </div>
+
+        <div class="vkeys-grid" id="vkeys-grid">
+          <button class="vkey" data-face="U">U</button>
+          <button class="vkey" data-face="D">D</button>
+          <button class="vkey" data-face="R">R</button>
+          <button class="vkey" data-face="L">L</button>
+          <button class="vkey" data-face="F">F</button>
+          <button class="vkey" data-face="B">B</button>
+          <button class="vkey slice-key" data-face="M">M</button>
+          <button class="vkey slice-key" data-face="E">E</button>
+          <button class="vkey slice-key" data-face="S">S</button>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- CDN Dependencies: Three.js r128 + OrbitControls + GSAP -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+
+  <script>
+  (() => {
+    'use strict';
+
+    // =========================================================================
+    // 1. RUBIK STATE ENGINE (26-Cubie Exact Matrix/Vector Engine)
+    // =========================================================================
+    const FACES = ['U', 'D', 'L', 'R', 'F', 'B']; // +Y, -Y, -X, +X, +Z, -Z
+    const WCA_COLORS = {
+      U: 0xffd500, // Yellow Top (+Y)
+      D: 0xf8fafc, // White Bottom (-Y)
+      F: 0x009b48, // Green Front (+Z)
+      B: 0x0051ba, // Blue Back (-Z)
+      L: 0xd5002b, // Red Left (-X)
+      R: 0xff5800, // Orange Right (+X)
+    };
+
+    const CUBIE_DEFS = [];
+    for (let x = -1; x <= 1; x++) {
+      for (let y = -1; y <= 1; y++) {
+        for (let z = -1; z <= 1; z++) {
+          if (x === 0 && y === 0 && z === 0) continue;
+          let id = '';
+          if (y === 1) id += 'U';
+          else if (y === -1) id += 'D';
+          if (z === 1) id += 'F';
+          else if (z === -1) id += 'B';
+          if (x === -1) id += 'L';
+          else if (x === 1) id += 'R';
+          const stickers = [
+            y === 1 ? 'U' : null,
+            y === -1 ? 'D' : null,
+            x === -1 ? 'L' : null,
+            x === 1 ? 'R' : null,
+            z === 1 ? 'F' : null,
+            z === -1 ? 'B' : null,
+          ];
+          CUBIE_DEFS.push({ idx: CUBIE_DEFS.length, id, hx: x, hy: y, hz: z, stickers });
+        }
+      }
+    }
+
+    const ID_TO_IDX = Object.fromEntries(CUBIE_DEFS.map(c => [c.id, c.idx]));
+
+    const BASE_MOVES = {
+      U: { axis: 'y', layer: 1, dir: -1 },
+      D: { axis: 'y', layer: -1, dir: 1 },
+      E: { axis: 'y', layer: 0, dir: 1 },
+      R: { axis: 'x', layer: 1, dir: -1 },
+      L: { axis: 'x', layer: -1, dir: 1 },
+      M: { axis: 'x', layer: 0, dir: 1 },
+      F: { axis: 'z', layer: 1, dir: -1 },
+      B: { axis: 'z', layer: -1, dir: 1 },
+      S: { axis: 'z', layer: 0, dir: -1 },
+    };
+
+    const ALL_MOVES = {};
+    for (const [base, spec] of Object.entries(BASE_MOVES)) {
+      ALL_MOVES[base] = { ...spec, turns: 1, angle: spec.dir * (Math.PI / 2) };
+      ALL_MOVES[base + "'"] = { ...spec, dir: -spec.dir, turns: 1, angle: -spec.dir * (Math.PI / 2) };
+      ALL_MOVES[base + '2'] = { ...spec, turns: 2, angle: spec.dir * Math.PI };
+    }
+
+    const invertMove = m => (m.endsWith('2') ? m : m.endsWith("'") ? m[0] : m + "'");
+    const invertSeq = seq => {
+      const arr = Array.isArray(seq) ? seq : seq.trim().split(/\s+/).filter(Boolean);
+      return arr.slice().reverse().map(invertMove);
+    };
+
+    function simplifyMoves(moves) {
+      const stack = [];
+      const toTurns = m => (m.endsWith('2') ? 2 : m.endsWith("'") ? 3 : 1);
+      const fromTurns = (base, t) => {
+        t = ((t % 4) + 4) % 4;
+        if (t === 0) return null;
+        if (t === 1) return base;
+        if (t === 2) return base + '2';
+        return base + "'";
+      };
+      for (const m of moves) {
+        if (!stack.length) {
+          stack.push(m);
+          continue;
+        }
+        const top = stack[stack.length - 1];
+        if (top[0] === m[0]) {
+          const combined = fromTurns(m[0], toTurns(top) + toTurns(m));
+          stack.pop();
+          if (combined) stack.push(combined);
+        } else {
+          stack.push(m);
+        }
+      }
+      return stack;
+    }
+
+    class CubeState {
+      constructor() {
+        this.cubies = CUBIE_DEFS.map(d => ({
+          idx: d.idx,
+          id: d.id,
+          hx: d.hx, hy: d.hy, hz: d.hz,
+          x: d.hx, y: d.hy, z: d.hz,
+          s: d.stickers.slice()
+        }));
+      }
+
+      clone() {
+        const c = new CubeState();
+        for (let i = 0; i < 26; i++) {
+          const src = this.cubies[i];
+          const dst = c.cubies[i];
+          dst.x = src.x; dst.y = src.y; dst.z = src.z;
+          dst.s[0] = src.s[0]; dst.s[1] = src.s[1]; dst.s[2] = src.s[2];
+          dst.s[3] = src.s[3]; dst.s[4] = src.s[4]; dst.s[5] = src.s[5];
+        }
+        return c;
+      }
+
+      applyMove(moveStr) {
+        const m = ALL_MOVES[moveStr];
+        if (!m) throw new Error('Unknown move: ' + moveStr);
+        for (let t = 0; t < m.turns; t++) {
+          for (let i = 0; i < 26; i++) {
+            const c = this.cubies[i];
+            if (c[m.axis] !== m.layer) continue;
+            const { x, y, z, s } = c;
+            const [sU, sD, sL, sR, sF, sB] = s;
+            if (m.axis === 'y') {
+              if (m.dir === -1) {
+                c.x = -z; c.z = x;
+                s[2] = sF; s[5] = sL; s[3] = sB; s[4] = sR;
+              } else {
+                c.x = z; c.z = -x;
+                s[3] = sF; s[5] = sR; s[2] = sB; s[4] = sL;
+              }
+            } else if (m.axis === 'x') {
+              if (m.dir === -1) {
+                c.y = z; c.z = -y;
+                s[0] = sF; s[5] = sU; s[1] = sB; s[4] = sD;
+              } else {
+                c.y = -z; c.z = y;
+                s[4] = sU; s[1] = sF; s[5] = sD; s[0] = sB;
+              }
+            } else {
+              if (m.dir === -1) {
+                c.x = y; c.y = -x;
+                s[3] = sU; s[1] = sR; s[2] = sD; s[0] = sL;
+              } else {
+                c.x = -y; c.y = x;
+                s[2] = sU; s[1] = sL; s[3] = sD; s[0] = sR;
+              }
+            }
+          }
+        }
+        return this;
+      }
+
+      applySeq(seq) {
+        const arr = Array.isArray(seq) ? seq : seq.trim().split(/\s+/).filter(Boolean);
+        for (const m of arr) this.applyMove(m);
+        return this;
+      }
+
+      isSolved() {
+        for (let i = 0; i < 26; i++) {
+          const c = this.cubies[i];
+          if (c.x !== c.hx || c.y !== c.hy || c.z !== c.hz) return false;
+          const def = CUBIE_DEFS[i].stickers;
+          for (let f = 0; f < 6; f++) if (c.s[f] !== def[f]) return false;
+        }
+        return true;
+      }
+
+      isCubieSolved(id) {
+        const c = this.cubies[ID_TO_IDX[id]];
+        if (c.x !== c.hx || c.y !== c.hy || c.z !== c.hz) return false;
+        const def = CUBIE_DEFS[c.idx].stickers;
+        for (let f = 0; f < 6; f++) if (c.s[f] !== def[f]) return false;
+        return true;
+      }
+
+      areCubiesSolved(ids) {
+        return ids.every(id => this.isCubieSolved(id));
+      }
+
+      at(x, y, z) {
+        for (let i = 0; i < 26; i++) {
+          const c = this.cubies[i];
+          if (c.x === x && c.y === y && c.z === z) return c;
+        }
+        return null;
+      }
+
+      centersSolved() {
+        return this.areCubiesSolved(['U', 'D', 'L', 'R', 'F', 'B']);
+      }
+    }
+
+    // =========================================================================
+    // 2. BIG FOUR AI SOLVERS (CFOP, ROUX, ZZ, PETRUS)
+    // =========================================================================
+    function expandWide(seqStr) {
+      const tokens = seqStr.trim().split(/\s+/).filter(Boolean);
+      const out = [];
+      const wideMap = {
+        r: ['R', "M'"], "r'": ["R'", 'M'], r2: ['R2', 'M2'],
+        l: ['L', 'M'], "l'": ["L'", "M'"], l2: ['L2', 'M2'],
+        u: ['U', "E'"], "u'": ["U'", 'E'], u2: ['U2', 'E2'],
+        d: ['D', 'E'], "d'": ["D'", "E'"], d2: ['D2', 'E2'],
+        f: ['F', 'S'], "f'": ["F'", "S'"], f2: ['F2', 'S2'],
+        b: ['B', "S'"], "b'": ["B'", 'S'], b2: ['B2', 'S2'],
+      };
+      for (const t of tokens) {
+        if (wideMap[t]) out.push(...wideMap[t]);
+        else out.push(t);
+      }
+      return out;
+    }
+
+    const HTM_MOVES = ['U',"U'",'U2','D',"D'",'D2','L',"L'",'L2','R',"R'",'R2','F',"F'",'F2','B',"B'",'B2'];
+    const RUL_MOVES = ['R',"R'",'R2','U',"U'",'U2','L',"L'",'L2'];
+    const RU_MOVES  = ['R',"R'",'R2','U',"U'",'U2'];
+    const URF_MOVES = ['U',"U'",'U2','R',"R'",'R2','F',"F'",'F2'];
+    const RUM_MOVES = ['R',"R'",'R2','U',"U'",'U2','M',"M'",'M2'];
+    const MU_MOVES  = ['M',"M'",'M2','U',"U'",'U2'];
+    const MES_MOVES = ['M',"M'",'M2','E',"E'",'E2','S',"S'",'S2'];
+
+    const PRIMARY_STICKER_FACE = CUBIE_DEFS.map(d => d.stickers.findIndex(v => v !== null));
+    const PRIMARY_STICKER_COLOR = CUBIE_DEFS.map((d, i) => d.stickers[PRIMARY_STICKER_FACE[i]]);
+
+    function encodeCubieFast(cube, idx) {
+      const c = cube.cubies[idx];
+      const p = (c.x + 1) * 9 + (c.y + 1) * 3 + (c.z + 1);
+      const targetColor = PRIMARY_STICKER_COLOR[idx];
+      let face = 0;
+      for (let f = 0; f < 6; f++) {
+        if (c.s[f] === targetColor) { face = f; break; }
+      }
+      return (p << 3) | face;
+    }
+
+    function encodeCubiesKey(cube, indices) {
+      let key = 0;
+      for (let i = 0; i < indices.length; i++) {
+        key = key * 256 + encodeCubieFast(cube, indices[i]);
+      }
+      return key;
+    }
+
+    function bfsMacro(startCube, macros, keyFn, goalPred, maxDepth = 12) {
+      if (goalPred(startCube)) return [];
+      const visited = new Set([keyFn(startCube)]);
+      let frontier = [{ cube: startCube, path: [] }];
+      for (let d = 1; d <= maxDepth; d++) {
+        const nextFrontier = [];
+        for (const node of frontier) {
+          const prevMacro = node.path.length ? node.path[node.path.length - 1] : null;
+          for (const macro of macros) {
+            if (prevMacro && macro.length === 1 && prevMacro.length === 1 && macro[0][0] === prevMacro[0][0]) continue;
+            const nc = node.cube.clone();
+            nc.applySeq(macro);
+            const k = keyFn(nc);
+            if (visited.has(k)) continue;
+            visited.add(k);
+            const np = node.path.concat([macro]);
+            if (goalPred(nc)) return simplifyMoves(np.flat());
+            nextFrontier.push({ cube: nc, path: np });
+          }
+        }
+        frontier = nextFrontier;
+        if (!frontier.length) break;
+      }
+      throw new Error('bfsMacro exceeded maxDepth=' + maxDepth);
+    }
+
+    function buildGoalTable(macros, keyFn, goalDepth) {
+      const solved = new CubeState();
+      const table = new Map();
+      table.set(keyFn(solved), []);
+      let frontier = [{ cube: solved, path: [] }];
+      for (let d = 1; d <= goalDepth; d++) {
+        const next = [];
+        for (const node of frontier) {
+          const prev = node.path.length ? node.path[node.path.length - 1] : null;
+          for (const m of macros) {
+            if (prev && m[0][0] === prev[0][0]) continue;
+            const nc = node.cube.clone().applySeq(m);
+            const k = keyFn(nc);
+            if (table.has(k)) continue;
+            const np = node.path.concat([m]);
+            table.set(k, np);
+            next.push({ cube: nc, path: np });
+          }
+        }
+        frontier = next;
+      }
+      return table;
+    }
+
+    function solveBidirectional(startCube, macros, keyFn, goalTable, maxStartDepth = 5) {
+      const sk = keyFn(startCube);
+      if (goalTable.has(sk)) return simplifyMoves(invertSeq(goalTable.get(sk).flat()));
+      const visited = new Set([sk]);
+      let frontier = [{ cube: startCube, path: [] }];
+      for (let d = 1; d <= maxStartDepth; d++) {
+        const next = [];
+        for (const node of frontier) {
+          const prev = node.path.length ? node.path[node.path.length - 1] : null;
+          for (const m of macros) {
+            if (prev && m[0][0] === prev[0][0]) continue;
+            const nc = node.cube.clone().applySeq(m);
+            const k = keyFn(nc);
+            if (visited.has(k)) continue;
+            const np = node.path.concat([m]);
+            if (goalTable.has(k)) {
+              return simplifyMoves(np.flat().concat(invertSeq(goalTable.get(k).flat())));
+            }
+            visited.add(k);
+            next.push({ cube: nc, path: np });
+          }
+        }
+        frontier = next;
+      }
+      throw new Error('Bidirectional BFS exceeded depth');
+    }
+
+    function alignCenters(cube) {
+      if (cube.centersSolved()) return [];
+      const centerIdx = ['U','D','L','R','F','B'].map(id => ID_TO_IDX[id]);
+      return bfsMacro(
+        cube,
+        MES_MOVES.map(m => [m]),
+        c => encodeCubiesKey(c, centerIdx),
+        c => c.centersSolved(),
+        4
+      );
+    }
+
+    const U_CORNER_POS = [[1,1,1],[1,1,-1],[-1,1,-1],[-1,1,1]];
+    const U_EDGE_POS   = [[0,1,1],[1,1,0],[0,1,-1],[-1,1,0]];
+
+    function getOLLSig(cube) {
+      let sig = '';
+      for (const [x,y,z] of U_CORNER_POS) {
+        const c = cube.at(x,y,z);
+        if (c.s[0] === 'U') sig += '0';
+        else {
+          const cwFace = (x===1 && z===1) ? 3 : (x===1 && z===-1) ? 5 : (x===-1 && z===-1) ? 2 : 4;
+          sig += (c.s[cwFace] === 'U') ? '1' : '2';
+        }
+      }
+      for (const [x,y,z] of U_EDGE_POS) sig += (cube.at(x,y,z).s[0] === 'U') ? '0' : '1';
+      return sig;
+    }
+
+    function getPLLSig(cube) {
+      return U_CORNER_POS.map(([x,y,z]) => cube.at(x,y,z).id).join(',') + '|' +
+             U_EDGE_POS.map(([x,y,z]) => cube.at(x,y,z).id).join(',');
+    }
+
+    function getCornerSig(cube) {
+      return U_CORNER_POS.map(([x,y,z]) => {
+        const c = cube.at(x,y,z);
+        let ori = '0';
+        if (c.s[0] !== 'U') {
+          const cwFace = (x===1 && z===1) ? 3 : (x===1 && z===-1) ? 5 : (x===-1 && z===-1) ? 2 : 4;
+          ori = (c.s[cwFace] === 'U') ? '1' : '2';
+        }
+        return c.id + ':' + ori;
+      }).join('|');
+    }
+
+    // Verified Algorithm Tables (57 OLL, 21 PLL, 42 COLL, 42+ CMLL)
+    const OLL_LIST = [
+      ['OLL 1 (Runway)', "R U2 R2 F R F' U2 R' F R F'"],
+      ['OLL 2 (Zamboni)', "F R U R' U' F' f R U R' U' f'"],
+      ['OLL 3 (Anti-Mouse)', "f R U R' U' f' U' F R U R' U' F'"],
+      ['OLL 4 (Mouse)', "f R U R' U' f' U F R U R' U' F'"],
+      ['OLL 5 (Lefty Square)', "r' U2 R U R' U r"],
+      ['OLL 6 (Righty Square)', "r U2 R' U' R U' r'"],
+      ['OLL 7 (Wide Sune)', "r U R' U R U2 r'"],
+      ['OLL 8 (Left Wide Sune)', "r' U' R U' R' U2 r"],
+      ['OLL 9 (Kite)', "R U R' U' R' F R2 U R' U' F'"],
+      ['OLL 10 (Anti-Kite)', "R U R' U R' F R F' R U2 R'"],
+      ['OLL 11 (Downstairs)', "r U R' U R' F R F' R U2 r'"],
+      ['OLL 12 (Upstairs)', "M' R' U' R U' R' U2 R U' M"],
+      ['OLL 13 (Gun)', "F U R U' R2 F' R U R U' R'"],
+      ['OLL 14 (Anti-Gun)', "R' F R U R' F' R F U' F'"],
+      ['OLL 15 (Squeegee)', "r' U' r R' U' R U r' U r"],
+      ['OLL 16 (Anti-Squeegee)', "r U r' R U R' U' r U' r'"],
+      ['OLL 17 (Slash)', "R U R' U R' F R F' U2 R' F R F'"],
+      ['OLL 18 (Crown)', "r U R' U R U2 r2 U' R U' R' U2 r"],
+      ['OLL 19 (Bunny)', "M U R U R' U' M' R' F R F'"],
+      ['OLL 20 (X-Shape)', "r U R' U' M2 U R U' R' U' M'"],
+      ['OLL 21 (H)', "R U2 R' U' R U R' U' R U' R'"],
+      ['OLL 22 (Pi)', "R U2 R2 U' R2 U' R2 U2 R"],
+      ['OLL 23 (U / Headlights)', "R2 D R' U2 R D' R' U2 R'"],
+      ['OLL 24 (T / Chameleon)', "r U R' U' r' F R F'"],
+      ['OLL 25 (L / Bowtie)', "F' r U R' U' r' F R"],
+      ['OLL 26 (Antisune)', "R U2 R' U' R U' R'"],
+      ['OLL 27 (Sune)', "R U R' U R U2 R'"],
+      ['OLL 28 (Stealth)', "r U R' U' M U R U' R'"],
+      ['OLL 29 (Awkward 1)', "R U R' U' R U' R' F' U' F R U R'"],
+      ['OLL 30 (Awkward 2)', "F R' F R2 U' R' U' R U R' F2"],
+      ['OLL 31 (Couch)', "R' U' F U R U' R' F' R"],
+      ['OLL 32 (Anti-Couch)', "S R U R' U' R' F R f'"],
+      ['OLL 33 (T-Key)', "R U R' U' R' F R F'"],
+      ['OLL 34 (C-City)', "R U R2 U' R' F R U R U' F'"],
+      ['OLL 35 (Fish Salad)', "R U2 R2 F R F' R U2 R'"],
+      ['OLL 36 (Sea Mew)', "L' U' L U' L' U L U L F' L' F"],
+      ['OLL 37 (Mounted Fish)', "F R' F' R U R U' R'"],
+      ['OLL 38 (Mario)', "R U R' U R U' R' U' R' F R F'"],
+      ['OLL 39 (Fung)', "L F' L' U' L U F U' L'"],
+      ['OLL 40 (Anti-Fung)', "R' F R U R' U' F' U R"],
+      ['OLL 41 (Dalmatian)', "R U R' U R U2 R' F R U R' U' F'"],
+      ['OLL 42 (Anti-Dalmatian)', "R' U' R U' R' U2 R F R U R' U' F'"],
+      ['OLL 43 (P-Shape L)', "f' L' U' L U f"],
+      ['OLL 44 (P-Shape R)', "f R U R' U' f'"],
+      ['OLL 45 (T-Line)', "F R U R' U' F'"],
+      ['OLL 46 (C-Headlights)', "R' U' R' F R F' U R"],
+      ['OLL 47 (Anti-Breakneck)', "F' L' U' L U L' U' L U F"],
+      ['OLL 48 (Breakneck)', "F R U R' U' R U R' U' F'"],
+      ['OLL 49 (Squeezy R)', "r U' r2 U r2 U r2 U' r"],
+      ['OLL 50 (Squeezy L)', "r' U r2 U' r2 U' r2 U r'"],
+      ['OLL 51 (Bottlecap)', "f R U R' U' R U R' U' f'"],
+      ['OLL 52 (Rice Cooker)', "R' F' U' F U' R U R' U R"],
+      ['OLL 53 (Frying Pan)', "r' U' R U' R' U R U' R' U2 r"],
+      ['OLL 54 (Anti-Frying Pan)', "r U R' U R U' R' U R U2 r'"],
+      ['OLL 55 (Highway)', "R U2 R2 U' R U' R' U2 F R F'"],
+      ['OLL 56 (Streetlights)', "r U r' U R U' R' U R U' R' r U' r'"],
+      ['OLL 57 (H-Edges)', "R U R' U' M' U R U' r'"],
+    ];
+
+    const PLL_LIST = [
+      ['Ua', "R U' R U R U R U' R' U' R2"],
+      ['Ub', "R2 U R U R' U' R' U' R' U R'"],
+      ['H',  "M2 U M2 U2 M2 U M2"],
+      ['Z',  "M2 U M2 U M' U2 M2 U2 M' U2"],
+      ['Aa', "R' F R' B2 R F' R' B2 R2"],
+      ['Ab', "R2 B2 R F R' B2 R F' R"],
+      ['E',  "R B' R' F R B R' F' R B R' F R B' R' F'"],
+      ['T',  "R U R' U' R' F R2 U' R' U' R U R' F'"],
+      ['Jb', "R U R' F' R U R' U' R' F R2 U' R' U'"],
+      ['Ja', "L' U' L F L' U' L U L F' L2 U L U"],
+      ['F',  "R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R"],
+      ['Ra', "R U' R' U' R U R D R' U' R D' R' U2 R'"],
+      ['Rb', "R' U2 R U2 R' F R U R' U' R' F' R2"],
+      ['Y',  "F R U' R' U' R U R' F' R U R' U' R' F R F'"],
+      ['V',  "R' U R' U' B' R' B2 U' B' U B' R B R"],
+      ['Na', "R U R' U R U R' F' R U R' U' R' F R2 U' R' U2 R U' R'"],
+      ['Nb', "R' U R U' R' F' U' F R U R' F R' F' R U' R"],
+      ['Ga', "R2 U R' U R' U' R U' R2 D U' R' U R D'"],
+      ['Gb', "R' U' R U D' R2 U R' U R U' R U' R2 D"],
+      ['Gc', "R2 U' R U' R U R' U R2 D' U R U' R' D"],
+      ['Gd', "R U R' U' D R2 U' R U' R' U R' U R2 D'"],
+    ];
+
+    const COLL_LIST = [
+      ['O-Adj (Jb)', "R U R' F' R U R' U' R' F R2 U' R' U'"],
+      ['O-Diag (Y)', "F R U' R' U' R U R' F' R U R' U' R' F R F'"],
+      ['H-Cols', "R U R' U R U' R' U R U2 R'"],
+      ['H-Rows', "F R U R' U' R U R' U' R U R' U' F'"],
+      ['H-AdjF', "R U R' U R U L' U R' U' L"],
+      ['H-AdjR', "F R U' R' U R U2 R' U' R U R' U' F'"],
+      ['Pi-1', "R U2 R2 U' R2 U' R2 U2 R"],
+      ['Pi-2', "R' F2 R U2 R U2 R' F2 R U2 R'"],
+      ['Pi-3', "R U R' U' R' F R2 U R' U' R U R' U' F'"],
+      ['Pi-4', "R' U' F' R U R' U' R' F R2 U2 R' U2 R"],
+      ['Pi-5', "R U D' R U R' D R2 U' R' U' R2 U2 R"],
+      ['Pi-6', "R U2 R' U' R U R' U2 R' F R2 U' R' U' R U R' F'"],
+      ['U-1', "R2 D R' U2 R D' R' U2 R'"],
+      ['U-2', "R' U' R U' R' U2 R2 U R' U R U2 R'"],
+      ['U-3', "R2 D' R U2 R' D R U2 R"],
+      ['U-4', "R' U2 R F U' R' U' R U F'"],
+      ['U-5', "R' F R U' R' U' R U R' F' R U R' U' R' F R F' R"],
+      ['U-6', "R U2 R' U' R U' R' r U R' U' r' F R F'"],
+      ['T-1', "R U2 R' U' R U' R2 U2 R U R' U R"],
+      ['T-2', "r U R' U' r' F R F'"],
+      ['T-3', "F R U R' U' R U' R' U' R U R' F'"],
+      ['T-4', "R' U R U2 L' R' U R U' L"],
+      ['T-5', "R' U R2 D r' U2 r D' R2 U' R"],
+      ['L-1', "F' r U R' U' r' F R"],
+      ['L-2', "F R' F' r U R U' r'"],
+      ['L-3', "R U2 R' U' R U R' U' R U R' U' R U' R'"],
+      ['L-4', "R U2 R D R' U2 R D' R2"],
+      ['L-5', "R' U2 R' D' R U2 R' D R2"],
+      ['L-6', "R' U' R U R' F' R U R' U' R' F R2"],
+      ['S-1', "R U R' U R U2 R'"],
+      ['S-2', "L' U R U' L U R'"],
+      ['S-3', "R U' L' U R' U' L"],
+      ['S-4', "R U R' U R U' R D R' U' R D' R2"],
+      ['S-5', "F' R U2 R' U2 R' F2 R U R U' R' F'"],
+      ['AS-1', "R U2 R' U' R U' R'"],
+      ['AS-3', "R' U' R U' R' U R' D' R U R' D R2"],
+      ['AS-4', "R2 D R' U2 R D' R2 U' R U' R'"],
+      ['S-6 (Sune+L)', "R U R' U R U2 R' F' r U R' U' r' F R"],
+      ['S-7 (Sune+Niklas)', "R U R' U R U2 R' U R U' L' U R' U' L"],
+      ['T-6 (Sune+Jb)', "R U R' U R U2 R' U2 R U R' F' R U R' U' R' F R2 U' R' U'"],
+      ['Pi-7 (Sune+Jb)', "R U R' U R U2 R' U' R U R' F' R U R' U' R' F R2 U' R' U'"],
+      ['AS-5 (ASune+Y)', "R U2 R' U' R U' R' F R U' R' U' R U R' F' R U R' U' R' F R F'"],
+      ['AS-6 (ASune+AntiNiklas)', "R U2 R' U' R U' R' U2 L' U R U' L U R'"],
+    ];
+
+    const ROUX_CMLL_FAST = [
+      ['CMLL O-Adj (Jb)', "R U R' F' R U R' U' R' F R2 U' R' U'"],
+      ['CMLL O-Diag (Y)', "F R U' R' U' R U R' F' R U R' U' R' F R F'"],
+      ['CMLL H-Cols', "R U2 R' U' R U R' U' R U' R'"],
+      ['CMLL H-Rows', "F R U R' U' R U R' U' R U R' U' F'"],
+      ['CMLL H-Adj', "R U2 R2 F R F' U2 R' F R F'"],
+      ['CMLL Pi-1', "R U2 R2 U' R2 U' R2 U2 R"],
+      ['CMLL Pi-2', "F R U R' U' R U R' U' F'"],
+      ['CMLL Pi-3', "r U' r' U' r U r' F' U F"],
+      ['CMLL U-1', "R2 D R' U2 R D' R' U2 R'"],
+      ['CMLL T-Basic', "F R U R' U' F'"],
+      ['CMLL T-1', "R U R' U' R' F R F'"],
+      ['CMLL L-1', "F R' F' r U R U' r'"],
+      ['CMLL S-1', "R U R' U R U2 R'"],
+      ['CMLL AS-1', "R U2 R' U' R U' R'"],
+      ['CMLL AS-2', "r U2 R' U' R U' r'"],
+      ['CMLL S-2', "r U R' U R U2 r'"],
+    ];
+
+    // Lazy-initialized lookup maps & goal tables
+    let TABLES = null;
+    function ensureTables() {
+      if (TABLES) return TABLES;
+
+      const OLL_MAP = new Map([['00000000', { name: 'OLL Skip', moves: [] }]]);
+      for (const [name, algStr] of OLL_LIST) {
+        const alg = expandWide(algStr);
+        for (let pre = 0; pre < 4; pre++) {
+          const full = simplifyMoves([...Array(pre).fill('U'), ...alg]);
+          const s = new CubeState().applySeq(invertSeq(full));
+          const sig = getOLLSig(s);
+          if (!OLL_MAP.has(sig)) OLL_MAP.set(sig, { name, moves: full });
+        }
+      }
+
+      const PLL_MAP = new Map();
+      for (let pre = 0; pre < 4; pre++) {
+        const full = simplifyMoves(Array(pre).fill('U'));
+        const s = new CubeState().applySeq(invertSeq(full));
+        PLL_MAP.set(getPLLSig(s), { name: pre ? 'AUF (Căn chỉnh tầng U)' : 'PLL Skip', moves: full });
+      }
+      for (const [name, algStr] of PLL_LIST) {
+        const alg = expandWide(algStr);
+        for (let pre = 0; pre < 4; pre++) {
+          for (let post = 0; post < 4; post++) {
+            const full = simplifyMoves([...Array(pre).fill('U'), ...alg, ...Array(post).fill('U')]);
+            const s = new CubeState().applySeq(invertSeq(full));
+            const sig = getPLLSig(s);
+            if (!PLL_MAP.has(sig)) PLL_MAP.set(sig, { name: `PLL ${name}`, moves: full });
+          }
+        }
+      }
+
+      const COLL_MAP = new Map();
+      for (let pre = 0; pre < 4; pre++) {
+        const full = simplifyMoves(Array(pre).fill('U'));
+        const s = new CubeState().applySeq(invertSeq(full));
+        COLL_MAP.set(getCornerSig(s), { name: pre ? 'AUF (Căn góc U)' : 'COLL Skip', moves: full });
+      }
+      for (const [name, algStr] of COLL_LIST) {
+        const alg = expandWide(algStr);
+        for (let pre = 0; pre < 4; pre++) {
+          for (let post = 0; post < 4; post++) {
+            const full = simplifyMoves([...Array(pre).fill('U'), ...alg, ...Array(post).fill('U')]);
+            const s = new CubeState().applySeq(invertSeq(full));
+            const sig = getCornerSig(s);
+            if (!COLL_MAP.has(sig)) COLL_MAP.set(sig, { name: `COLL ${name}`, moves: full });
+          }
+        }
+      }
+
+      const CMLL_MAP = new Map();
+      for (let pre = 0; pre < 4; pre++) {
+        const full = simplifyMoves(Array(pre).fill('U'));
+        const s = new CubeState().applySeq(invertSeq(full));
+        CMLL_MAP.set(getCornerSig(s), { name: pre ? 'AUF (Căn góc U)' : 'CMLL Skip', moves: full });
+      }
+      const preservesBlocks = c => c.areCubiesSolved(['L','R','DL','DBL','BL','DFL','FL','DR','DBR','BR','DFR','FR']);
+      for (const [name, algStr] of ROUX_CMLL_FAST) {
+        const alg = expandWide(algStr);
+        if (!preservesBlocks(new CubeState().applySeq(alg))) continue;
+        for (let pre = 0; pre < 4; pre++) {
+          for (let post = 0; post < 4; post++) {
+            const full = simplifyMoves([...Array(pre).fill('U'), ...alg, ...Array(post).fill('U')]);
+            const s = new CubeState().applySeq(invertSeq(full));
+            const sig = getCornerSig(s);
+            if (!CMLL_MAP.has(sig)) CMLL_MAP.set(sig, { name, moves: full });
+          }
+        }
+      }
+      for (const [name, algStr] of COLL_LIST) {
+        const alg = expandWide(algStr);
+        for (let pre = 0; pre < 4; pre++) {
+          for (let post = 0; post < 4; post++) {
+            const full = simplifyMoves([...Array(pre).fill('U'), ...alg, ...Array(post).fill('U')]);
+            const s = new CubeState().applySeq(invertSeq(full));
+            const sig = getCornerSig(s);
+            if (!CMLL_MAP.has(sig)) CMLL_MAP.set(sig, { name: `CMLL ${name}`, moves: full });
+          }
+        }
+      }
+
+      TABLES = {
+        OLL_MAP, PLL_MAP, COLL_MAP, CMLL_MAP,
+        CROSS_TABLE: null,
+        EOLINE_TABLE: null,
+        PETRUS_222_TABLE: null,
+        ROUX_FB_SQ_TABLE: null,
+      };
+      return TABLES;
+    }
+
+    const ALL_EDGE_POS = [
+      [0,1,1],[1,1,0],[0,1,-1],[-1,1,0],
+      [0,-1,1],[1,-1,0],[0,-1,-1],[-1,-1,0],
+      [1,0,1],[-1,0,1],[1,0,-1],[-1,0,-1]
+    ];
+
+    function isEdgeGoodAt(c, x, y, z) {
+      const refFace = y === 1 ? 0 : y === -1 ? 1 : z === 1 ? 4 : 5;
+      const col = c.s[refFace];
+      if (col === 'U' || col === 'D') return true;
+      if (col === 'F' || col === 'B') {
+        const home = CUBIE_DEFS[c.idx].stickers;
+        return home[0] === null && home[1] === null;
+      }
+      return false;
+    }
+
+    function getEOMask(cube) {
+      let mask = 0;
+      for (let i = 0; i < 12; i++) {
+        const [x,y,z] = ALL_EDGE_POS[i];
+        if (!isEdgeGoodAt(cube.at(x,y,z), x, y, z)) mask |= (1 << i);
+      }
+      return mask;
+    }
+
+    function getBadEdgeIds(cube) {
+      const bad = [];
+      for (let i = 0; i < 12; i++) {
+        const [x,y,z] = ALL_EDGE_POS[i];
+        const e = cube.at(x,y,z);
+        if (!isEdgeGoodAt(e, x, y, z)) bad.push(e.id);
+      }
+      return bad;
+    }
+
+    const CROSS_IDX = ['DF','DR','DB','DL'].map(id => ID_TO_IDX[id]);
+    const EOLINE_EDGES = ['DF','DB'].map(id => ID_TO_IDX[id]);
+    const PETRUS_222_IDX = ['DBL','DL','DB','BL'].map(id => ID_TO_IDX[id]);
+    const ROUX_FB_SQ_IDX = ['DL','DBL','BL'].map(id => ID_TO_IDX[id]);
+    const getEOLineKey = c => encodeCubiesKey(c, EOLINE_EDGES) * 4096 + getEOMask(c);
+
+    // --- CFOP ---
+    function solveCFOP(inputCube) {
+      const T = ensureTables();
+      if (!T.CROSS_TABLE) T.CROSS_TABLE = buildGoalTable(HTM_MOVES.map(m=>[m]), c => encodeCubiesKey(c, CROSS_IDX), 4);
+      const cube = inputCube.clone();
+      const steps = [];
+      const pushStep = (phase, title, moves, desc, targets) => {
+        if (!moves.length) return;
+        cube.applySeq(moves);
+        steps.push({ phase, title, moves, desc, targets });
+      };
+
+      const cAlign = alignCenters(cube);
+      if (cAlign.length) pushStep('Chuẩn bị', 'Căn chỉnh 6 tâm chuẩn', cAlign, 'Đưa tâm Trắng về đáy D và tâm Vàng lên đỉnh U bằng chuyển động trục giữa.', ['U','D','L','R','F','B']);
+
+      const unsolvedCross = ['DF','DR','DB','DL'].filter(id => !cube.isCubieSolved(id));
+      if (unsolvedCross.length) {
+        const crossMoves = solveBidirectional(cube, HTM_MOVES.map(m=>[m]), c => encodeCubiesKey(c, CROSS_IDX), T.CROSS_TABLE, 5);
+        pushStep('CFOP - Bước 1', 'White Cross (Chữ thập trắng đáy D)', crossMoves,
+          `Đưa ${unsolvedCross.length} viên cạnh Trắng (${unsolvedCross.join(', ')}) xuống mặt đáy D sao cho đồng thời khớp màu với các tâm xung quanh.`,
+          ['DF','DR','DB','DL','D']);
+      }
+
+      const slotDefs = {
+        FR: { label: 'Trước-Phải (FR)', cubies: ['DFR','FR'], triggers: [['R','U',"R'"],['R',"U'","R'"],['R','U2',"R'"],["F'",'U','F'],["F'","U'",'F'],["F'",'U2','F'],["R'",'F','R',"F'"],['F',"R'","F'",'R']] },
+        FL: { label: 'Trước-Trái (FL)', cubies: ['DFL','FL'], triggers: [["L'","U'",'L'],["L'",'U','L'],["L'",'U2','L'],['F',"U'","F'"],['F','U',"F'"],['F','U2',"F'"],['L',"F'","L'",'F'],["F'",'L','F',"L'"]] },
+        BR: { label: 'Sau-Phải (BR)', cubies: ['DBR','BR'], triggers: [["R'",'U','R'],["R'","U'",'R'],["R'",'U2','R'],['B',"U'","B'"],['B','U',"B'"],['B','U2',"B'"],['R',"B'","R'",'B'],["B'",'R','B',"R'"]] },
+        BL: { label: 'Sau-Trái (BL)', cubies: ['DBL','BL'], triggers: [['L',"U'","L'"],['L','U',"L'"],['L','U2',"L'"],["B'",'U','B'],["B'","U'",'B'],["B'",'U2','B'],["L'",'B','L',"B'"],['B',"L'","B'",'L']] },
+      };
+      const extractTriggers = {
+        FR: [['R','U',"R'"], ["F'",'U','F']],
+        FL: [["L'","U'",'L'], ['F',"U'","F'"]],
+        BR: [["R'",'U','R'], ['B','U',"B'"]],
+        BL: [['L',"U'","L'"], ["B'",'U','B']],
+      };
+
+      const remainingSlots = ['FR','FL','BR','BL'].filter(s => !cube.areCubiesSolved(slotDefs[s].cubies));
+      let slotNum = 1;
+      while (remainingSlots.length > 0) {
+        let bestSlot = null, bestMoves = null;
+        for (const sName of remainingSlots) {
+          const sDef = slotDefs[sName];
+          const idxPair = sDef.cubies.map(id => ID_TO_IDX[id]);
+          const macros = [['U'],["U'"],['U2'], ...sDef.triggers];
+          for (const other of remainingSlots) {
+            if (other !== sName) macros.push(...extractTriggers[other]);
+          }
+          const moves = bfsMacro(cube, macros, c => encodeCubiesKey(c, idxPair), c => c.areCubiesSolved(sDef.cubies), 6);
+          if (!bestMoves || moves.length < bestMoves.length) {
+            bestMoves = moves;
+            bestSlot = sName;
+          }
+        }
+        const sDef = slotDefs[bestSlot];
+        const cornerInU = cube.cubies[ID_TO_IDX[sDef.cubies[0]]].y === 1;
+        const edgeInU = cube.cubies[ID_TO_IDX[sDef.cubies[1]]].y === 1;
+        const contextNote = (cornerInU && edgeInU)
+          ? `Ghép cặp góc-cạnh ${sDef.cubies.join(' & ')} từ tầng trên U và cài vào khe ${sDef.label} mà giữ nguyên White Cross.`
+          : `Đưa viên ${sDef.cubies.join(' / ')} đang nằm ở khe dưới lên tầng U, ghép cặp rồi cài vào khe ${sDef.label}.`;
+        pushStep('CFOP - Bước 2', `F2L Cặp ${slotNum}: ${sDef.label}`, bestMoves, contextNote, sDef.cubies);
+        remainingSlots.splice(remainingSlots.indexOf(bestSlot), 1);
+        slotNum++;
+      }
+
+      const oll = T.OLL_MAP.get(getOLLSig(cube));
+      if (oll && oll.moves.length) {
+        pushStep('CFOP - Bước 3', `OLL: ${oll.name}`, oll.moves,
+          `Áp dụng thuật toán ${oll.name} để lật toàn bộ mặt Vàng tầng trên U hướng lên đỉnh mà không phá 2 tầng F2L.`,
+          ['UFR','UFL','UBR','UBL','UF','UR','UB','UL']);
+      }
+
+      const pll = T.PLL_MAP.get(getPLLSig(cube));
+      if (pll && pll.moves.length) {
+        pushStep('CFOP - Bước 4', pll.name, pll.moves,
+          `Dùng ${pll.name} để hoán vị đúng các viên góc và cạnh tầng trên, hoàn thành khối Rubik.`,
+          ['UFR','UFL','UBR','UBL','UF','UR','UB','UL']);
+      }
+      return steps;
+    }
+
+    // --- ROUX ---
+    function solveRoux(inputCube) {
+      const T = ensureTables();
+      if (!T.ROUX_FB_SQ_TABLE) T.ROUX_FB_SQ_TABLE = buildGoalTable(HTM_MOVES.map(m=>[m]), c => encodeCubiesKey(c, ROUX_FB_SQ_IDX), 4);
+      const cube = inputCube.clone();
+      const steps = [];
+      const pushStep = (phase, title, moves, desc, targets) => {
+        if (!moves.length) return;
+        cube.applySeq(moves);
+        steps.push({ phase, title, moves, desc, targets });
+      };
+
+      if (!cube.areCubiesSolved(['L','R'])) {
+        const cAlign = alignCenters(cube);
+        pushStep('Chuẩn bị', 'Căn chỉnh tâm L-R', cAlign, 'Đưa tâm Đỏ về mặt trái L và tâm Cam về mặt phải R làm trục định vị cho 2 block.', ['L','R']);
+      }
+
+      if (!cube.areCubiesSolved(['DL','DBL','BL']) && !cube.areCubiesSolved(['DL','DFL','FL'])) {
+        const mBack = solveBidirectional(cube, HTM_MOVES.map(m=>[m]), c => encodeCubiesKey(c, ROUX_FB_SQ_IDX), T.ROUX_FB_SQ_TABLE, 5);
+        pushStep('Roux - Bước 1', 'First Block: Khối 1x2x2 D-L-B', mBack,
+          'Xây khối vuông 1x2x2 đầu tiên ở mặt trái (cạnh DL, góc DBL và cạnh BL) gắn với tâm L.',
+          ['DL','DBL','BL','L']);
+      }
+      if (!cube.areCubiesSolved(['DL','DBL','BL','DFL','FL'])) {
+        if (cube.areCubiesSolved(['DL','DBL','BL'])) {
+          const m = bfsMacro(cube, ['U',"U'",'U2','R',"R'",'R2','F',"F'",'F2','M',"M'",'M2'].map(x=>[x]),
+            c => encodeCubiesKey(c, ['DFL','FL'].map(id => ID_TO_IDX[id])),
+            c => c.areCubiesSolved(['DFL','FL']), 12);
+          pushStep('Roux - Bước 1', 'Hoàn thiện First Block (1x2x3 mặt L)', m,
+            'Ghép thêm cặp trước-trái (DFL & FL) để hoàn tất khối 1x2x3 bên mặt trái L.',
+            ['DL','DBL','BL','DFL','FL','L']);
+        } else {
+          const m = bfsMacro(cube, ['U',"U'",'U2','R',"R'",'R2','B',"B'",'B2','M',"M'",'M2'].map(x=>[x]),
+            c => encodeCubiesKey(c, ['DBL','BL'].map(id => ID_TO_IDX[id])),
+            c => c.areCubiesSolved(['DBL','BL']), 12);
+          pushStep('Roux - Bước 1', 'Hoàn thiện First Block (1x2x3 mặt L)', m,
+            'Ghép thêm cặp sau-trái (DBL & BL) để hoàn tất khối 1x2x3 bên mặt trái L.',
+            ['DL','DBL','BL','DFL','FL','L']);
+        }
+      }
+
+      if (!cube.areCubiesSolved(['DR','DFR','FR']) && !cube.areCubiesSolved(['DR','DBR','BR'])) {
+        const mF = bfsMacro(cube, RUM_MOVES.map(x=>[x]),
+          c => encodeCubiesKey(c, ['DR','DFR','FR'].map(id => ID_TO_IDX[id])),
+          c => c.areCubiesSolved(['DR','DFR','FR']), 14);
+        pushStep('Roux - Bước 2', 'Second Block: Khối 1x2x2 D-R-F', mF,
+          'Chỉ dùng tổ hợp R, U, M (giữ tự do trục giữa M) để dựng khối 1x2x2 bên phải mà không phá hỏng First Block.',
+          ['DR','DFR','FR','R']);
+      }
+      if (!cube.areCubiesSolved(['DR','DFR','FR','DBR','BR'])) {
+        if (cube.areCubiesSolved(['DR','DFR','FR'])) {
+          const macros = ['U',"U'",'U2','M',"M'",'M2'].map(x=>[x]).concat([
+            ["R'",'U','R'],["R'","U'",'R'],["R'",'U2','R'],
+            ["R'",'M','U',"M'",'R'],["R'",'M',"U'","M'",'R'],["R'",'M','U2',"M'",'R']
+          ]);
+          const m = bfsMacro(cube, macros, c => encodeCubiesKey(c, ['DBR','BR'].map(id => ID_TO_IDX[id])), c => c.areCubiesSolved(['DBR','BR']), 10);
+          pushStep('Roux - Bước 2', 'Hoàn thiện Second Block (1x2x3 mặt R)', m,
+            'Đưa viên góc-cạnh sau-phải (DBR & BR) về vị trí đúng mà không làm ảnh hưởng đến block trái L.',
+            ['DR','DFR','FR','DBR','BR','R']);
+        } else {
+          const macros = ['U',"U'",'U2','M',"M'",'M2'].map(x=>[x]).concat([
+            ['R','U',"R'"],['R',"U'","R'"],['R','U2',"R'"],
+            ['R',"M'",'U','M',"R'"],['R',"M'","U'",'M',"R'"],['R',"M'",'U2','M',"R'"]
+          ]);
+          const m = bfsMacro(cube, macros, c => encodeCubiesKey(c, ['DFR','FR'].map(id => ID_TO_IDX[id])), c => c.areCubiesSolved(['DFR','FR']), 10);
+          pushStep('Roux - Bước 2', 'Hoàn thiện Second Block (1x2x3 mặt R)', m,
+            'Đưa viên góc-cạnh trước-phải (DFR & FR) về vị trí đúng mà không làm ảnh hưởng đến block trái L.',
+            ['DR','DFR','FR','DBR','BR','R']);
+        }
+      }
+
+      const cmll = T.CMLL_MAP.get(getCornerSig(cube));
+      if (cmll && cmll.moves.length) {
+        pushStep('Roux - Bước 3', cmll.name, cmll.moves,
+          `Giải đồng thời vị trí và hướng 4 góc tầng U bằng ${cmll.name} trong khi bảo toàn nguyên vẹn hai block 1x2x3 bên trái và phải.`,
+          ['UFR','UFL','UBR','UBL']);
+      }
+
+      const lseEdgesPos = [[0,1,1],[1,1,0],[0,1,-1],[-1,1,0],[0,-1,1],[0,-1,-1]];
+      const lseIsEO = c => {
+        const uc = c.at(0,1,0).id;
+        if (uc !== 'U' && uc !== 'D') return false;
+        return lseEdgesPos.every(([x,y,z]) => {
+          const col = c.at(x,y,z).s[y === 1 ? 0 : 1];
+          return col === 'U' || col === 'D';
+        });
+      };
+      const lseEOKey = c => {
+        let k = encodeCubieFast(c, ID_TO_IDX['U']);
+        for (const [x,y,z] of lseEdgesPos) {
+          const col = c.at(x,y,z).s[y === 1 ? 0 : 1];
+          k = k * 2 + (col === 'U' || col === 'D' ? 1 : 0);
+        }
+        return k;
+      };
+      if (!lseIsEO(cube)) {
+        const m = bfsMacro(cube, MU_MOVES.map(x=>[x]), lseEOKey, lseIsEO, 14);
+        pushStep('Roux - Bước 4a', 'LSE: Định hướng 6 cạnh (EO)', m,
+          'Chỉ sử dụng cặp phím <M, U> để lật toàn bộ 6 cạnh còn lại về đúng hướng Vàng/Trắng.',
+          ['UF','UR','UB','UL','DF','DB']);
+      }
+
+      const lseULURKey = c => encodeCubiesKey(c, ['U','UFR','UL','UR'].map(id => ID_TO_IDX[id])) * 64 + (lseEOKey(c) & 63);
+      const lseULURDone = c => lseIsEO(c) && c.isCubieSolved('UL') && c.isCubieSolved('UR') && c.isCubieSolved('UFR');
+      if (!lseULURDone(cube)) {
+        const m = bfsMacro(cube, MU_MOVES.map(x=>[x]), lseULURKey, lseULURDone, 12);
+        pushStep('Roux - Bước 4b', 'LSE: Cài 2 cạnh Trái/Phải (UL & UR)', m,
+          'Đưa 2 cạnh UL (Vàng-Đỏ) và UR (Vàng-Cam) về đúng khe tầng trên khớp với 4 góc bằng M và U.',
+          ['UL','UR','UFR','UFL','UBR','UBL']);
+      }
+
+      const lseAllKey = c => {
+        let s = c.at(0,1,0).id + '|' + encodeCubieFast(c, ID_TO_IDX['UFR']);
+        for (const [x,y,z] of lseEdgesPos) {
+          const e = c.at(x,y,z);
+          s += '|' + e.id + e.s[y === 1 ? 0 : 1];
+        }
+        return s;
+      };
+      if (!cube.isSolved()) {
+        const m = bfsMacro(cube, MU_MOVES.map(x=>[x]), lseAllKey, c => c.isSolved(), 14);
+        pushStep('Roux - Bước 4c', 'LSE: Hoàn tất 4 cạnh trục M (4c)', m,
+          'Giải nốt 4 cạnh trên lát cắt giữa M (UF, UB, DF, DB) và đưa 4 tâm trục M về vị trí hoàn chỉnh.',
+          ['UF','UB','DF','DB','U','F','D','B']);
+      }
+      return steps;
+    }
+
+    // --- ZZ ---
+    function solveZZ(inputCube) {
+      const T = ensureTables();
+      if (!T.EOLINE_TABLE) T.EOLINE_TABLE = buildGoalTable(HTM_MOVES.map(m=>[m]), getEOLineKey, 5);
+      const cube = inputCube.clone();
+      const steps = [];
+      const pushStep = (phase, title, moves, desc, targets) => {
+        if (!moves.length) return;
+        cube.applySeq(moves);
+        steps.push({ phase, title, moves, desc, targets });
+      };
+
+      const cAlign = alignCenters(cube);
+      if (cAlign.length) pushStep('Chuẩn bị', 'Căn chỉnh 6 tâm chuẩn', cAlign, 'Cố định 6 tâm để xác định chính xác tập các cạnh xấu (Bad Edges).', ['U','D','L','R','F','B']);
+
+      const badIds = getBadEdgeIds(cube);
+      if (badIds.length > 0 || !cube.areCubiesSolved(['DF','DB'])) {
+        const eoMoves = solveBidirectional(cube, HTM_MOVES.map(m=>[m]), getEOLineKey, T.EOLINE_TABLE, 5);
+        const targetSet = Array.from(new Set([...badIds, 'DF', 'DB']));
+        pushStep('ZZ - Bước 1', 'EOLine (Định hướng 12 cạnh + Line đáy)', eoMoves,
+          `Phát hiện ${badIds.length} cạnh xấu (Bad Edges). Xoay mặt F/B đúng thời điểm để định hướng toàn bộ 12 cạnh và tạo đường Line Trắng DF–DB ở đáy.`,
+          targetSet);
+      }
+
+      const rulMacros = RUL_MOVES.map(x=>[x]);
+      if (!cube.areCubiesSolved(['DL','DBL','BL'])) {
+        const m = bfsMacro(cube, rulMacros, c => encodeCubiesKey(c, ['DL','DBL','BL'].map(id=>ID_TO_IDX[id])), c => c.areCubiesSolved(['DL','DBL','BL']), 14);
+        pushStep('ZZ - Bước 2a', 'ZZ-F2L: Khối trái sau (D-L-B)', m,
+          'Rotationless F2L: chỉ dùng <R, U, L> (tuyệt đối không xoay F/B hay xoay khối) để dựng khối 1x2x2 bên trái.',
+          ['DL','DBL','BL']);
+      }
+      if (!cube.areCubiesSolved(['DFL','FL'])) {
+        const macros = ['U',"U'",'U2','R',"R'",'R2'].map(x=>[x]).concat([["L'",'U','L'],["L'","U'",'L'],["L'",'U2','L']]);
+        const m = bfsMacro(cube, macros, c => encodeCubiesKey(c, ['DFL','FL'].map(id=>ID_TO_IDX[id])), c => c.areCubiesSolved(['DFL','FL']), 10);
+        pushStep('ZZ - Bước 2b', 'ZZ-F2L: Hoàn thiện Block trái (L)', m,
+          'Dùng L\' U L ghép cặp góc-cạnh trước-trái (DFL & FL), hoàn chỉnh toàn bộ nửa trái F2L.',
+          ['DFL','FL']);
+      }
+      if (!cube.areCubiesSolved(['DR','DBR','BR'])) {
+        const m = bfsMacro(cube, RU_MOVES.map(x=>[x]), c => encodeCubiesKey(c, ['DR','DBR','BR'].map(id=>ID_TO_IDX[id])), c => c.areCubiesSolved(['DR','DBR','BR']), 15);
+        pushStep('ZZ - Bước 2c', 'ZZ-F2L: Khối phải sau (2-gen R, U)', m,
+          'Chuyển sang dùng thuần 2-gen <R, U> siêu tốc độ để dựng khối 1x2x2 bên phải.',
+          ['DR','DBR','BR']);
+      }
+      if (!cube.areCubiesSolved(['DFR','FR'])) {
+        const macros = ['U',"U'",'U2'].map(x=>[x]).concat([['R','U',"R'"],['R',"U'","R'"],['R','U2',"R'"]]);
+        const m = bfsMacro(cube, macros, c => encodeCubiesKey(c, ['DFR','FR'].map(id=>ID_TO_IDX[id])), c => c.areCubiesSolved(['DFR','FR']), 10);
+        pushStep('ZZ - Bước 2d', 'ZZ-F2L: Hoàn thiện Block phải (R)', m,
+          'Cài cặp cuối DFR & FR bằng <R, U>. Nhờ EOLine từ Bước 1, tầng trên tự động có sẵn chữ thập Vàng!',
+          ['DFR','FR']);
+      }
+
+      const coll = T.COLL_MAP.get(getCornerSig(cube));
+      if (coll && coll.moves.length) {
+        pushStep('ZZ - Bước 3a', `LL / COLL: ${coll.name}`, coll.moves,
+          `Tầng trên đã có sẵn chữ thập Vàng! Dùng ${coll.name} để định hướng và hoán vị cả 4 góc mà bảo toàn chữ thập.`,
+          ['UFR','UFL','UBR','UBL']);
+      }
+      const pll = T.PLL_MAP.get(getPLLSig(cube));
+      if (pll && pll.moves.length) {
+        pushStep('ZZ - Bước 3b', `EPLL: ${pll.name}`, pll.moves,
+          `Hoán vị 4 cạnh chữ thập tầng trên bằng ${pll.name} (Ua/Ub/H/Z) để hoàn thành khối Rubik.`,
+          ['UF','UR','UB','UL']);
+      }
+      return steps;
+    }
+
+    // --- PETRUS ---
+    function solvePetrus(inputCube) {
+      const T = ensureTables();
+      if (!T.PETRUS_222_TABLE) T.PETRUS_222_TABLE = buildGoalTable(HTM_MOVES.map(m=>[m]), c => encodeCubiesKey(c, PETRUS_222_IDX), 4);
+      const cube = inputCube.clone();
+      const steps = [];
+      const pushStep = (phase, title, moves, desc, targets) => {
+        if (!moves.length) return;
+        cube.applySeq(moves);
+        steps.push({ phase, title, moves, desc, targets });
+      };
+
+      const cAlign = alignCenters(cube);
+      if (cAlign.length) pushStep('Chuẩn bị', 'Căn chỉnh 6 tâm chuẩn', cAlign, 'Đưa 6 tâm về vị trí chuẩn trước khi dựng khối 2x2x2 ở góc D-B-L.', ['U','D','L','R','F','B']);
+
+      if (!cube.areCubiesSolved(['DBL','DL','DB','BL'])) {
+        const m222 = solveBidirectional(cube, HTM_MOVES.map(m=>[m]), c => encodeCubiesKey(c, PETRUS_222_IDX), T.PETRUS_222_TABLE, 5);
+        pushStep('Petrus - Bước 1', 'Xây khối 2x2x2 (Góc D-B-L)', m222,
+          'Giải góc DBL cùng 3 cạnh DL, DB, BL để tạo khối lập phương 2x2x2 chắc chắn ở góc Sau-Trái-Đáy.',
+          ['DBL','DL','DB','BL','D','B','L']);
+      }
+
+      if (!cube.areCubiesSolved(['DFL','DF','FL'])) {
+        const m223 = bfsMacro(cube, URF_MOVES.map(m=>[m]), c => encodeCubiesKey(c, ['DFL','DF','FL'].map(id=>ID_TO_IDX[id])), c => c.areCubiesSolved(['DFL','DF','FL']), 14);
+        pushStep('Petrus - Bước 2', 'Mở rộng thành 2x2x3 (Mặt F)', m223,
+          'Chỉ dùng <U, R, F> mở rộng khối 2x2x2 về phía trước F (thêm DFL, DF, FL) thành khối 2x2x3.',
+          ['DFL','DF','FL','DBL','DL','DB','BL']);
+      }
+
+      const remPos7 = [[0,1,1],[1,1,0],[0,1,-1],[-1,1,0],[1,0,1],[1,0,-1],[1,-1,0]];
+      const getBadMask7 = c => {
+        let m = 0;
+        for (let i = 0; i < 7; i++) {
+          const [x,y,z] = remPos7[i];
+          if (!isEdgeGoodAt(c.at(x,y,z), x, y, z)) m |= (1 << i);
+        }
+        return m;
+      };
+      const getBad7Ids = c => {
+        const list = [];
+        for (let i = 0; i < 7; i++) {
+          const [x,y,z] = remPos7[i];
+          const e = c.at(x,y,z);
+          if (!isEdgeGoodAt(e, x, y, z)) list.push(e.id);
+        }
+        return list;
+      };
+      if (getBadMask7(cube) !== 0) {
+        const bad7 = getBad7Ids(cube);
+        const eoMacros = ['R',"R'",'R2','U',"U'",'U2'].map(x=>[x]).concat([
+          ["F'",'U','F'], ["F'","U'",'F'], ["F'",'U2','F'],
+          ['F','R',"F'"], ['F',"R'","F'"], ['F','R2',"F'"],
+        ]);
+        const mEO = bfsMacro(cube, eoMacros, getBadMask7, c => getBadMask7(c) === 0, 12);
+        pushStep('Petrus - Bước 3', 'Bad Edges EO (Lật cạnh xấu)', mEO,
+          `Phát hiện ${bad7.length} cạnh xấu còn lại. Dùng tổ hợp F' U F / F R F' để định hướng tất cả cạnh về trạng thái tốt mà giữ nguyên khối 2x2x3.`,
+          bad7);
+      }
+
+      if (!cube.areCubiesSolved(['DR','DBR','BR'])) {
+        const m = bfsMacro(cube, RU_MOVES.map(x=>[x]), c => encodeCubiesKey(c, ['DR','DBR','BR'].map(id=>ID_TO_IDX[id])), c => c.areCubiesSolved(['DR','DBR','BR']), 15);
+        pushStep('Petrus - Bước 4a', 'Hoàn thiện F2L: Block phải sau (<R, U>)', m,
+          'Sau khi EO xong, phần F2L còn lại chỉ cần 2 mặt R và U! Xây khối 1x2x2 bên phải sau.',
+          ['DR','DBR','BR']);
+      }
+      if (!cube.areCubiesSolved(['DFR','FR'])) {
+        const macros = ['U',"U'",'U2'].map(x=>[x]).concat([['R','U',"R'"],['R',"U'","R'"],['R','U2',"R'"]]);
+        const m = bfsMacro(cube, macros, c => encodeCubiesKey(c, ['DFR','FR'].map(id=>ID_TO_IDX[id])), c => c.areCubiesSolved(['DFR','FR']), 10);
+        pushStep('Petrus - Bước 4b', 'Hoàn thiện F2L: Cặp cuối FR (<R, U>)', m,
+          'Cài cặp góc-cạnh cuối cùng DFR & FR bằng <R, U> để hoàn thành toàn bộ 2 tầng đầu (tự động có chữ thập Vàng).',
+          ['DFR','FR']);
+      }
+
+      const coll = T.COLL_MAP.get(getCornerSig(cube));
+      if (coll && coll.moves.length) {
+        pushStep('Petrus - Bước 4c', `Last Layer: ${coll.name}`, coll.moves,
+          `Giải toàn bộ 4 góc tầng trên U mà bảo toàn chữ thập Vàng bằng ${coll.name}.`,
+          ['UFR','UFL','UBR','UBL']);
+      }
+      const pll = T.PLL_MAP.get(getPLLSig(cube));
+      if (pll && pll.moves.length) {
+        pushStep('Petrus - Bước 4d', `Last Layer: ${pll.name}`, pll.moves,
+          `Hoán vị các cạnh chữ thập cuối cùng bằng ${pll.name} để hoàn thiện khối Rubik.`,
+          ['UF','UR','UB','UL']);
+      }
+      return steps;
+    }
+
+    const SOLVERS = { CFOP: solveCFOP, Roux: solveRoux, ZZ: solveZZ, Petrus: solvePetrus };
+
+    // =========================================================================
+    // 3. THREE.JS ZERO-GRAVITY 3D SCENE & LEVITATING 26-CUBIE CUBE
+    // =========================================================================
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(44, window.innerWidth / window.innerHeight, 0.1, 150);
+    function getDefaultCamPos() {
+      const aspect = window.innerWidth / Math.max(1, window.innerHeight);
+      const scale = aspect < 0.85 ? 1.48 : aspect < 1.1 ? 1.2 : 1.0;
+      return new THREE.Vector3(4.7 * scale, 3.85 * scale, 5.55 * scale);
+    }
+    camera.position.copy(getDefaultCamPos());
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.enablePan = false;
+    controls.minDistance = 5.2;
+    controls.maxDistance = 16;
+    controls.autoRotate = false;
+    controls.autoRotateSpeed = 1.35;
+
+    // 3-Point Studio + Space Rim Lighting
+    scene.add(new THREE.AmbientLight(0xdbeafe, 0.72));
+    scene.add(new THREE.HemisphereLight(0xe0f2fe, 0x1e293b, 0.65));
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 0.95);
+    keyLight.position.set(6, 10, 8);
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0x93c5fd, 0.45);
+    fillLight.position.set(-7, -3, 6);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.DirectionalLight(0xa78bfa, 0.55);
+    rimLight.position.set(-5, -8, -7);
+    scene.add(rimLight);
+
+    // Floating Glow Particles (Antigravity Dust & Deep Space Stars)
+    function createGlowSpriteTexture() {
+      const c = document.createElement('canvas');
+      c.width = 64; c.height = 64;
+      const ctx = c.getContext('2d');
+      const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      g.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      g.addColorStop(0.28, 'rgba(180, 245, 255, 0.8)');
+      g.addColorStop(0.6, 'rgba(56, 189, 248, 0.22)');
+      g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 64, 64);
+      const tex = new THREE.CanvasTexture(c);
+      tex.encoding = THREE.sRGBEncoding;
+      return tex;
+    }
+
+    const particleTex = createGlowSpriteTexture();
+
+    function createParticleField(count, minR, maxR, size, palette) {
+      const pos = new Float32Array(count * 3);
+      const cols = new Float32Array(count * 3);
+      const seeds = new Float32Array(count * 3);
+      const tmp = new THREE.Color();
+      for (let i = 0; i < count; i++) {
+        const r = minR + Math.random() * (maxR - minR);
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+        pos[i * 3 + 1] = r * Math.cos(phi);
+        pos[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+
+        tmp.setHex(palette[i % palette.length]);
+        cols[i * 3] = tmp.r;
+        cols[i * 3 + 1] = tmp.g;
+        cols[i * 3 + 2] = tmp.b;
+
+        seeds[i * 3] = Math.random() * Math.PI * 2;
+        seeds[i * 3 + 1] = 0.25 + Math.random() * 0.6;
+        seeds[i * 3 + 2] = pos[i * 3 + 1];
+      }
+      const geom = new THREE.BufferGeometry();
+      geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      geom.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+      const mat = new THREE.PointsMaterial({
+        size,
+        map: particleTex,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.85,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const pts = new THREE.Points(geom, mat);
+      pts.userData = { seeds };
+      return pts;
+    }
+
+    const starDust = createParticleField(600, 12, 34, 0.22, [0xffffff, 0x93c5fd, 0xc4b5fd]);
+    const glowMotes = createParticleField(220, 3.6, 13.5, 0.34, [0x00f0ff, 0x38bdf8, 0xa855f7, 0x22d3ee]);
+    scene.add(starDust);
+    scene.add(glowMotes);
+
+    // Subtle Antigravity Containment Rings below the cube
+    const chamberGroup = new THREE.Group();
+    chamberGroup.position.y = -2.85;
+    chamberGroup.rotation.x = Math.PI / 2;
+    const ring1 = new THREE.Mesh(
+      new THREE.RingGeometry(2.55, 2.61, 80),
+      new THREE.MeshBasicMaterial({ color: 0x00f0ff, side: THREE.DoubleSide, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false })
+    );
+    const ring2 = new THREE.Mesh(
+      new THREE.RingGeometry(3.25, 3.29, 80),
+      new THREE.MeshBasicMaterial({ color: 0xa855f7, side: THREE.DoubleSide, transparent: true, opacity: 0.14, blending: THREE.AdditiveBlending, depthWrite: false })
+    );
+    chamberGroup.add(ring1, ring2);
+    scene.add(chamberGroup);
+
+    // Procedural Beveled Cubie & Sticker Geometries
+    function makeRoundedSquareShape(size, radius) {
+      const s = new THREE.Shape();
+      const h = size / 2;
+      const r = Math.min(radius, h * 0.45);
+      s.moveTo(-h + r, -h);
+      s.lineTo(h - r, -h);
+      s.quadraticCurveTo(h, -h, h, -h + r);
+      s.lineTo(h, h - r);
+      s.quadraticCurveTo(h, h, h - r, h);
+      s.lineTo(-h + r, h);
+      s.quadraticCurveTo(-h, h, -h, h - r);
+      s.lineTo(-h, -h + r);
+      s.quadraticCurveTo(-h, -h, -h + r, -h);
+      return s;
+    }
+
+    const cubieBodyGeom = new THREE.ExtrudeGeometry(makeRoundedSquareShape(0.80, 0.06), {
+      depth: 0.80,
+      bevelEnabled: true,
+      bevelThickness: 0.07,
+      bevelSize: 0.07,
+      bevelSegments: 3,
+      curveSegments: 6,
+    });
+    cubieBodyGeom.center(); // Exact 0.94 x 0.94 x 0.94 beveled plastic body
+
+    const stickerGeom = new THREE.ExtrudeGeometry(makeRoundedSquareShape(0.72, 0.065), {
+      depth: 0.016,
+      bevelEnabled: true,
+      bevelThickness: 0.008,
+      bevelSize: 0.008,
+      bevelSegments: 2,
+      curveSegments: 6,
+    });
+    stickerGeom.center();
+
+    const cubieBodyMat = new THREE.MeshStandardMaterial({
+      color: 0x0b0e14,
+      roughness: 0.65,
+      metalness: 0.15,
+    });
+
+    const stickerMats = {};
+    for (const f of FACES) {
+      stickerMats[f] = new THREE.MeshStandardMaterial({
+        color: WCA_COLORS[f],
+        roughness: 0.25,
+        metalness: 0.1,
+      });
+    }
+
+    // Thick 12-edge Neon Cage for target cubie highlighting (NO face darkening!)
+    function createNeonCageGroup() {
+      const group = new THREE.Group();
+      const s = 0.985;
+      const h = s / 2;
+      const tCore = 0.026;
+      const tGlow = 0.062;
+
+      const matCore = new THREE.MeshBasicMaterial({
+        color: 0x67f8ff,
+        transparent: true,
+        opacity: 0.95,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const matGlow = new THREE.MeshBasicMaterial({
+        color: 0x00e5ff,
+        transparent: true,
+        opacity: 0.28,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+
+      const barXCore = new THREE.BoxGeometry(s + tCore, tCore, tCore);
+      const barYCore = new THREE.BoxGeometry(tCore, s + tCore, tCore);
+      const barZCore = new THREE.BoxGeometry(tCore, tCore, s + tCore);
+
+      const barXGlow = new THREE.BoxGeometry(s + tGlow, tGlow, tGlow);
+      const barYGlow = new THREE.BoxGeometry(tGlow, s + tGlow, tGlow);
+      const barZGlow = new THREE.BoxGeometry(tGlow, tGlow, s + tGlow);
+
+      const addPair = (gC, gG, x, y, z) => {
+        const m1 = new THREE.Mesh(gC, matCore); m1.position.set(x, y, z);
+        const m2 = new THREE.Mesh(gG, matGlow); m2.position.set(x, y, z);
+        group.add(m1, m2);
+      };
+
+      for (const a of [-h, h]) {
+        for (const b of [-h, h]) {
+          addPair(barXCore, barXGlow, 0, a, b);
+          addPair(barYCore, barYGlow, a, 0, b);
+          addPair(barZCore, barZGlow, a, b, 0);
+        }
+      }
+      group.visible = false;
+      group.userData = { matCore, matGlow };
+      return group;
+    }
+
+    // Levitating Root + Inner Core + 26 Cubie Meshes
+    const levitationRoot = new THREE.Group();
+    scene.add(levitationRoot);
+
+    const cubeGroup = new THREE.Group();
+    levitationRoot.add(cubeGroup);
+
+    const pivotGroup = new THREE.Group();
+    cubeGroup.add(pivotGroup);
+
+    // Matte black inner core sphere so gaps never show void during turns
+    const innerCore = new THREE.Mesh(
+      new THREE.SphereGeometry(0.96, 24, 24),
+      new THREE.MeshStandardMaterial({ color: 0x07090d, roughness: 0.9, metalness: 0.05 })
+    );
+    cubeGroup.add(innerCore);
+
+    const CUBIE_STEP = 1.0;
+    const cubieMeshes = [];
+
+    const STICKER_TRANSFORMS = [
+      { pos: [0, 0.478, 0], rot: [-Math.PI / 2, 0, 0] }, // U (+Y)
+      { pos: [0, -0.478, 0], rot: [Math.PI / 2, 0, 0] }, // D (-Y)
+      { pos: [-0.478, 0, 0], rot: [0, -Math.PI / 2, 0] }, // L (-X)
+      { pos: [0.478, 0, 0], rot: [0, Math.PI / 2, 0] }, // R (+X)
+      { pos: [0, 0, 0.478], rot: [0, 0, 0] }, // F (+Z)
+      { pos: [0, 0, -0.478], rot: [0, Math.PI, 0] }, // B (-Z)
+    ];
+
+    for (const def of CUBIE_DEFS) {
+      const cGroup = new THREE.Group();
+      cGroup.position.set(def.hx * CUBIE_STEP, def.hy * CUBIE_STEP, def.hz * CUBIE_STEP);
+      cGroup.userData = { id: def.id, idx: def.idx };
+
+      const body = new THREE.Mesh(cubieBodyGeom, cubieBodyMat);
+      cGroup.add(body);
+
+      for (let f = 0; f < 6; f++) {
+        const col = def.stickers[f];
+        if (!col) continue;
+        const st = new THREE.Mesh(stickerGeom, stickerMats[col]);
+        const tr = STICKER_TRANSFORMS[f];
+        st.position.set(tr.pos[0], tr.pos[1], tr.pos[2]);
+        st.rotation.set(tr.rot[0], tr.rot[1], tr.rot[2]);
+        cGroup.add(st);
+      }
+
+      const neonCage = createNeonCageGroup();
+      cGroup.add(neonCage);
+      cGroup.userData.neonCage = neonCage;
+
+      cubeGroup.add(cGroup);
+      cubieMeshes.push(cGroup);
+    }
+
+    // Sync 3D cubie mesh transforms directly from CubeState (prevents any drift)
+    function syncMeshesToState(state) {
+      const basis = new THREE.Matrix4();
+      const faceDirs = [
+        new THREE.Vector3(0, 1, 0),
+        new THREE.Vector3(0, -1, 0),
+        new THREE.Vector3(-1, 0, 0),
+        new THREE.Vector3(1, 0, 0),
+        new THREE.Vector3(0, 0, 1),
+        new THREE.Vector3(0, 0, -1),
+      ];
+      const faceCode = ['U', 'D', 'L', 'R', 'F', 'B'];
+
+      for (let i = 0; i < 26; i++) {
+        const cs = state.cubies[i];
+        const mesh = cubieMeshes[i];
+        mesh.position.set(cs.x * CUBIE_STEP, cs.y * CUBIE_STEP, cs.z * CUBIE_STEP);
+
+        // Determine exact rotation matrix mapping home stickers to current stickers
+        const def = CUBIE_DEFS[i].stickers;
+        const vX = new THREE.Vector3(1, 0, 0);
+        const vY = new THREE.Vector3(0, 1, 0);
+        const vZ = new THREE.Vector3(0, 0, 1);
+
+        // Find where home +Y, +X, +Z moved (centers have 1 sticker, edges 2, corners 3)
+        // Wait: for centers (only 1 non-null sticker), any rotation preserving that normal looks identical!
+        let mapped = [];
+        for (let hf = 0; hf < 6; hf++) {
+          if (!def[hf]) continue;
+          const color = def[hf];
+          const curFace = cs.s.indexOf(color);
+          mapped.push({ home: faceDirs[hf], cur: faceDirs[curFace] });
+        }
+        // Build orthonormal basis from mapped vectors
+        const mat3 = new THREE.Matrix4();
+        if (mapped.length === 1) {
+          // Center cubie: align mapped[0].home -> mapped[0].cur
+          const q = new THREE.Quaternion().setFromUnitVectors(mapped[0].home, mapped[0].cur);
+          mesh.quaternion.copy(q);
+        } else {
+          // Edge or Corner: pick 2 perpendicular home axes
+          let mA = mapped[0];
+          let mB = mapped.find(m => Math.abs(m.home.dot(mA.home)) < 0.1);
+          const homeCross = new THREE.Vector3().crossVectors(mA.home, mB.home);
+          const curCross = new THREE.Vector3().crossVectors(mA.cur, mB.cur);
+          // Matrix H maps standard basis -> (mA.home, mB.home, homeCross), Matrix C maps standard -> (mA.cur, mB.cur, curCross)
+          const H = new THREE.Matrix4().makeBasis(mA.home, mB.home, homeCross);
+          const C = new THREE.Matrix4().makeBasis(mA.cur, mB.cur, curCross);
+          mat3.multiplyMatrices(C, H.transpose());
+          mesh.quaternion.setFromRotationMatrix(mat3);
+        }
+      }
+    }
+
+    function setHighlightedCubies(targetIds) {
+      const set = new Set(targetIds || []);
+      for (const mesh of cubieMeshes) {
+        mesh.userData.neonCage.visible = set.has(mesh.userData.id);
+      }
+    }
+
+    // =========================================================================
+    // 4. APPLICATION STATE, ANIMATION PIPELINE & CONTROLLER
+    // =========================================================================
+    const appState = {
+      cube: new CubeState(),
+      method: 'CFOP',
+      scrambleSeq: [],
+      steps: [],       // [{ phase, title, moves, desc, targets }]
+      flatMoves: [],   // [{ move, stepIdx, tokenIdx }]
+      cursor: 0,       // index in flatMoves (0 .. flatMoves.length)
+      isPlaying: false,
+      isAnimating: false,
+      moveDurationMs: 500,
+      modifier: '',    // '', "'", '2'
+      activeTween: null,
+      playTimer: null,
+    };
+
+    // DOM refs
+    const elMethod = document.getElementById('method-select');
+    const elBtnScramble = document.getElementById('btn-scramble');
+    const elBtnResetCam = document.getElementById('btn-reset-cam');
+    const elBtnAutoRot = document.getElementById('btn-auto-rotate');
+    const elBtnTogglePipe = document.getElementById('btn-toggle-pipeline');
+    const elPipelinePanel = document.getElementById('pipeline-panel');
+    const elBtnPrev = document.getElementById('btn-prev');
+    const elBtnPlay = document.getElementById('btn-play');
+    const elBtnNext = document.getElementById('btn-next');
+    const elBtnAnalyze = document.getElementById('btn-solve-analyze');
+    const elBtnResetCube = document.getElementById('btn-reset-cube');
+    const elSpeedSlider = document.getElementById('speed-slider');
+    const elSpeedLabel = document.getElementById('speed-label');
+
+    const elHudPhase = document.getElementById('hud-phase');
+    const elHudCounter = document.getElementById('hud-counter');
+    const elHudTitle = document.getElementById('hud-title');
+    const elHudCurrentMove = document.getElementById('hud-current-move');
+    const elHudMoveSeq = document.getElementById('hud-move-seq');
+    const elHudExplanation = document.getElementById('hud-explanation');
+    const elHudTargets = document.getElementById('hud-targets');
+    const elHudProgress = document.getElementById('hud-progress');
+
+    const elPipeMethod = document.getElementById('pipeline-method-name');
+    const elPipeStats = document.getElementById('pipeline-stats');
+    const elScrambleDisp = document.getElementById('scramble-display');
+    const elStepList = document.getElementById('step-list');
+
+    // Animate a single move with Three.js Pivot Group + GSAP
+    function animateMove(moveStr, durationMs) {
+      return new Promise(resolve => {
+        const spec = ALL_MOVES[moveStr];
+        if (!spec) { resolve(); return; }
+
+        appState.isAnimating = true;
+        pivotGroup.rotation.set(0, 0, 0);
+        pivotGroup.position.set(0, 0, 0);
+        cubeGroup.updateMatrixWorld(true);
+
+        const movingMeshes = [];
+        for (let i = 0; i < 26; i++) {
+          if (appState.cube.cubies[i][spec.axis] === spec.layer) {
+            movingMeshes.push(cubieMeshes[i]);
+          }
+        }
+        for (const m of movingMeshes) pivotGroup.attach(m);
+
+        const durSec = Math.max(0.03, durationMs / 1000);
+        const easeStr = durationMs <= 160 ? 'power1.out' : 'power2.inOut';
+        const target = {};
+        target[spec.axis] = spec.angle;
+
+        appState.activeTween = gsap.to(pivotGroup.rotation, {
+          ...target,
+          duration: durSec,
+          ease: easeStr,
+          onComplete: () => {
+            appState.activeTween = null;
+            pivotGroup.updateMatrixWorld(true);
+            for (const m of movingMeshes) cubeGroup.attach(m);
+            pivotGroup.rotation.set(0, 0, 0);
+            appState.cube.applyMove(moveStr);
+            syncMeshesToState(appState.cube);
+            cubeGroup.updateMatrixWorld(true);
+            appState.isAnimating = false;
+            resolve();
+          }
+        });
+      });
+    }
+
+    function stopPlayback() {
+      appState.isPlaying = false;
+      if (appState.playTimer) {
+        clearTimeout(appState.playTimer);
+        appState.playTimer = null;
+      }
+      updateButtons();
+    }
+
+    function cancelActiveAnimation() {
+      if (appState.activeTween) {
+        appState.activeTween.progress(1);
+        appState.activeTween = null;
+      }
+      appState.isAnimating = false;
+    }
+
+    function buildFlatMoves(steps) {
+      const flat = [];
+      steps.forEach((st, sIdx) => {
+        st.moves.forEach((mv, tIdx) => {
+          flat.push({ move: mv, stepIdx: sIdx, tokenIdx: tIdx });
+        });
+      });
+      return flat;
+    }
+
+    function analyzeCurrentState() {
+      stopPlayback();
+      if (appState.isAnimating) cancelActiveAnimation();
+
+      if (appState.cube.isSolved()) {
+        appState.steps = [];
+        appState.flatMoves = [];
+        appState.cursor = 0;
+        setHighlightedCubies([]);
+        renderHUD();
+        return;
+      }
+
+      try {
+        const solver = SOLVERS[appState.method];
+        const steps = solver(appState.cube);
+        appState.steps = steps;
+        appState.flatMoves = buildFlatMoves(steps);
+        appState.cursor = 0;
+      } catch (err) {
+        console.error(err);
+        elHudExplanation.innerHTML = `<span style="color:#fda4af">Lỗi phân tích: ${err.message}</span>`;
+      }
+      renderHUD();
+    }
+
+    function renderHUD() {
+      const total = appState.flatMoves.length;
+      const cur = appState.cursor;
+      elPipeMethod.textContent = `Lộ trình ${appState.method}`;
+      elPipeStats.textContent = `${total} moves`;
+      elHudCounter.textContent = `Move ${cur} / ${total}`;
+      elHudProgress.style.width = total > 0 ? `${(cur / total) * 100}%` : (appState.cube.isSolved() ? '100%' : '0%');
+
+      if (appState.cube.isSolved() && (total === 0 || cur >= total)) {
+        elHudPhase.textContent = total > 0 ? `${appState.method} · Hoàn thành!` : 'Hoàn chỉnh';
+        elHudTitle.textContent = total > 0 ? 'Khối Rubik đã được giải hoàn toàn!' : 'Khối Rubik đang ở trạng thái hoàn chỉnh';
+        elHudCurrentMove.textContent = '✓';
+        elHudMoveSeq.innerHTML = '<span class="seq-tok current">SOLVED</span>';
+        elHudExplanation.textContent = total > 0
+          ? `Xuất sắc! Toàn bộ ${total} nước đi theo phương pháp ${appState.method} đã hoàn tất. Bạn có thể tua lại bằng Prev Step hoặc nhấn Scramble để thử thách mới.`
+          : 'Nhấn "Scramble (Xáo trộn)" để sinh 20 nước đi ngẫu nhiên hoặc tự xoay bằng Bàn phím ảo bên dưới.';
+        elHudTargets.innerHTML = '<span class="target-chip">Tất cả hoàn tất</span>';
+        setHighlightedCubies([]);
+      } else if (total === 0) {
+        elHudPhase.textContent = 'Trạng thái tùy chỉnh';
+        elHudTitle.textContent = 'Bạn đã xoay thủ công từ bàn phím ảo';
+        elHudCurrentMove.textContent = '?';
+        elHudMoveSeq.innerHTML = '<span class="seq-tok">Nhấn Play hoặc Phân tích AI</span>';
+        elHudExplanation.textContent = `Khối Rubik đang ở trạng thái tùy biến. Hãy nhấn "Play / Pause" hoặc "Phân tích AI" để AI tính lời giải theo phương pháp ${appState.method}.`;
+        elHudTargets.innerHTML = '<span class="target-chip">Tùy chỉnh</span>';
+        setHighlightedCubies([]);
+      } else {
+        const entry = appState.flatMoves[Math.min(cur, total - 1)];
+        const step = appState.steps[entry.stepIdx];
+        elHudPhase.textContent = step.phase;
+        elHudTitle.textContent = step.title;
+        elHudCurrentMove.textContent = entry.move;
+
+        elHudMoveSeq.innerHTML = step.moves.map((mv, idx) => {
+          const cls = idx < entry.tokenIdx ? 'seq-tok done' : idx === entry.tokenIdx ? 'seq-tok current' : 'seq-tok';
+          return `<span class="${cls}">${mv}</span>`;
+        }).join('');
+
+        elHudExplanation.textContent = step.desc;
+        elHudTargets.innerHTML = (step.targets && step.targets.length)
+          ? step.targets.slice(0, 8).map(t => `<span class="target-chip">${t}</span>`).join('') + (step.targets.length > 8 ? `<span class="target-chip">+${step.targets.length - 8}</span>` : '')
+          : '<span class="target-chip">Toàn khối</span>';
+
+        setHighlightedCubies(step.targets);
+      }
+
+      // Render Pipeline Step List
+      elStepList.innerHTML = '';
+      if (appState.steps.length === 0) {
+        elStepList.innerHTML = `<div class="step-item"><div class="step-item-top"><span>Chưa có lộ trình giải</span></div><div class="step-item-moves">Xáo trộn khối hoặc nhấn Phân tích AI</div></div>`;
+      } else {
+        let runningStart = 0;
+        appState.steps.forEach((st, idx) => {
+          const startIdx = runningStart;
+          const endIdx = startIdx + st.moves.length;
+          runningStart = endIdx;
+
+          const item = document.createElement('div');
+          const isDone = cur >= endIdx;
+          const isActive = cur >= startIdx && cur < endIdx;
+          item.className = 'step-item' + (isActive ? ' active' : isDone ? ' completed' : '');
+          item.innerHTML = `
+            <div class="step-item-top">
+              <span class="step-item-phase">${st.phase}</span>
+              <span>${st.moves.length}m</span>
+            </div>
+            <div style="font-size:12px;font-weight:600;color:#f1f5f9;margin-top:2px;">${st.title}</div>
+            <div class="step-item-moves">${st.moves.join(' ')}</div>
+          `;
+          item.addEventListener('click', () => jumpToMoveIndex(startIdx));
+          elStepList.appendChild(item);
+          if (isActive) {
+            requestAnimationFrame(() => item.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+          }
+        });
+      }
+
+      updateButtons();
+    }
+
+    function updateButtons() {
+      const total = appState.flatMoves.length;
+      elBtnPrev.disabled = appState.isAnimating || curZero();
+      elBtnNext.disabled = appState.isAnimating || (total > 0 && appState.cursor >= total) || (total === 0 && appState.cube.isSolved());
+      elBtnPlay.innerHTML = appState.isPlaying ? '⏸ Pause' : '▶ Play / Pause';
+      elBtnPlay.classList.toggle('active', appState.isPlaying);
+    }
+    function curZero() { return appState.cursor <= 0; }
+
+    function jumpToMoveIndex(targetIdx) {
+      stopPlayback();
+      cancelActiveAnimation();
+      while (appState.cursor < targetIdx) {
+        appState.cube.applyMove(appState.flatMoves[appState.cursor].move);
+        appState.cursor++;
+      }
+      while (appState.cursor > targetIdx) {
+        appState.cursor--;
+        appState.cube.applyMove(invertMove(appState.flatMoves[appState.cursor].move));
+      }
+      syncMeshesToState(appState.cube);
+      renderHUD();
+    }
+
+    async function stepNext() {
+      if (appState.isAnimating) return;
+      if (appState.flatMoves.length === 0 && !appState.cube.isSolved()) {
+        analyzeCurrentState();
+      }
+      if (appState.cursor >= appState.flatMoves.length) {
+        stopPlayback();
+        return;
+      }
+      const entry = appState.flatMoves[appState.cursor];
+      renderHUD(); // ensure target highlights match move being executed
+      updateButtons();
+      await animateMove(entry.move, appState.moveDurationMs);
+      appState.cursor++;
+      renderHUD();
+    }
+
+    async function stepPrev() {
+      if (appState.isAnimating || appState.cursor <= 0) return;
+      stopPlayback();
+      const targetIdx = appState.cursor - 1;
+      const entry = appState.flatMoves[targetIdx];
+      appState.cursor = targetIdx;
+      renderHUD();
+      await animateMove(invertMove(entry.move), Math.min(appState.moveDurationMs, 420));
+      renderHUD();
+    }
+
+    async function runPlaybackLoop() {
+      if (!appState.isPlaying) return;
+      if (appState.flatMoves.length === 0 && !appState.cube.isSolved()) {
+        analyzeCurrentState();
+        appState.isPlaying = true;
+      }
+      if (appState.cursor >= appState.flatMoves.length) {
+        stopPlayback();
+        return;
+      }
+      await stepNext();
+      if (appState.isPlaying && appState.cursor < appState.flatMoves.length) {
+        const gap = Math.max(15, Math.min(120, appState.moveDurationMs * 0.14));
+        appState.playTimer = setTimeout(runPlaybackLoop, gap);
+      } else {
+        stopPlayback();
+      }
+    }
+
+    // Generate 20-move WCA random scramble and animate cleanly
+    async function doScramble() {
+      stopPlayback();
+      cancelActiveAnimation();
+
+      // Reset to solved first, then generate 20 non-redundant moves
+      appState.cube = new CubeState();
+      syncMeshesToState(appState.cube);
+
+      const seq = [];
+      let prev = '', prev2 = '';
+      const opp = { U:'D', D:'U', L:'R', R:'L', F:'B', B:'F' };
+      for (let i = 0; i < 20; i++) {
+        let m;
+        do {
+          m = HTM_MOVES[Math.floor(Math.random() * HTM_MOVES.length)];
+        } while (m[0] === prev || (opp[m[0]] === prev && m[0] === prev2));
+        prev2 = prev;
+        prev = m[0];
+        seq.push(m);
+      }
+
+      appState.scrambleSeq = seq;
+      appState.steps = [];
+      appState.flatMoves = [];
+      appState.cursor = 0;
+      elScrambleDisp.innerHTML = `<b>Scramble (20):</b> ${seq.join(' ')}`;
+      setHighlightedCubies([]);
+
+      elHudPhase.textContent = 'Đang xáo trộn...';
+      elHudTitle.textContent = 'Thực hiện 20 nước đi ngẫu nhiên chuẩn WCA';
+      elHudExplanation.textContent = 'Khối Rubik đang được xáo trộn trong buồng không trọng lực...';
+      elBtnScramble.disabled = true;
+
+      for (const m of seq) {
+        elHudCurrentMove.textContent = m;
+        await animateMove(m, 45);
+      }
+
+      elBtnScramble.disabled = false;
+      analyzeCurrentState();
+    }
+
+    // Manual Virtual Keyboard Turn
+    async function doManualMove(face, overrideMod) {
+      if (appState.isAnimating) return;
+      stopPlayback();
+      const mod = overrideMod !== undefined ? overrideMod : appState.modifier;
+      const moveStr = face + mod;
+      appState.scrambleSeq = [];
+      appState.steps = [];
+      appState.flatMoves = [];
+      appState.cursor = 0;
+      setHighlightedCubies([]);
+
+      elHudPhase.textContent = 'Xoay thủ công';
+      elHudTitle.textContent = `Nước đi: ${moveStr}`;
+      elHudCurrentMove.textContent = moveStr;
+      elHudMoveSeq.innerHTML = `<span class="seq-tok current">${moveStr}</span>`;
+      await animateMove(moveStr, Math.min(appState.moveDurationMs, 320));
+      renderHUD();
+    }
+
+    // =========================================================================
+    // 5. EVENT BINDINGS
+    // =========================================================================
+    elMethod.addEventListener('change', () => {
+      appState.method = elMethod.value;
+      if (appState.cube.isSolved() && appState.scrambleSeq.length > 0) {
+        stopPlayback();
+        cancelActiveAnimation();
+        appState.cube = new CubeState().applySeq(appState.scrambleSeq);
+        syncMeshesToState(appState.cube);
+        analyzeCurrentState();
+      } else if (!appState.cube.isSolved()) {
+        analyzeCurrentState();
+      } else {
+        renderHUD();
+      }
+    });
+
+    elBtnScramble.addEventListener('click', doScramble);
+
+    elBtnPlay.addEventListener('click', () => {
+      if (appState.isPlaying) {
+        stopPlayback();
+      } else {
+        if (appState.cube.isSolved() && appState.cursor >= appState.flatMoves.length) {
+          if (appState.flatMoves.length > 0) jumpToMoveIndex(0);
+          else return;
+        }
+        appState.isPlaying = true;
+        updateButtons();
+        runPlaybackLoop();
+      }
+    });
+
+    elBtnNext.addEventListener('click', () => {
+      stopPlayback();
+      stepNext();
+    });
+
+    elBtnPrev.addEventListener('click', () => {
+      stepPrev();
+    });
+
+    elBtnAnalyze.addEventListener('click', () => {
+      analyzeCurrentState();
+    });
+
+    elBtnResetCube.addEventListener('click', () => {
+      stopPlayback();
+      cancelActiveAnimation();
+      appState.cube = new CubeState();
+      appState.scrambleSeq = [];
+      appState.steps = [];
+      appState.flatMoves = [];
+      appState.cursor = 0;
+      elScrambleDisp.innerHTML = '<b>Scramble:</b> Chưa xáo trộn';
+      syncMeshesToState(appState.cube);
+      setHighlightedCubies([]);
+      renderHUD();
+    });
+
+    elSpeedSlider.addEventListener('input', () => {
+      const ms = parseInt(elSpeedSlider.value, 10);
+      appState.moveDurationMs = ms;
+      // Map 1500ms -> 0.2x, 500ms -> 1.0x, 100ms -> 3.0x
+      let mult;
+      if (ms >= 500) mult = 1.0 - ((ms - 500) / 1000) * 0.8;
+      else mult = 1.0 + ((500 - ms) / 400) * 2.0;
+      elSpeedLabel.textContent = `${ms}ms (${mult.toFixed(1)}x)`;
+    });
+
+    elBtnResetCam.addEventListener('click', () => {
+      const defPos = getDefaultCamPos();
+      gsap.to(camera.position, {
+        x: defPos.x,
+        y: defPos.y,
+        z: defPos.z,
+        duration: 0.75,
+        ease: 'power3.out',
+      });
+      gsap.to(controls.target, { x: 0, y: 0, z: 0, duration: 0.75, ease: 'power3.out' });
+    });
+
+    elBtnAutoRot.addEventListener('click', () => {
+      controls.autoRotate = !controls.autoRotate;
+      elBtnAutoRot.classList.toggle('active', controls.autoRotate);
+    });
+
+    elBtnTogglePipe.addEventListener('click', () => {
+      elPipelinePanel.classList.toggle('mobile-open');
+    });
+
+    // Virtual Keyboard Modifiers & Keys
+    document.querySelectorAll('.mod-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mod-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        appState.modifier = btn.dataset.mod;
+      });
+    });
+
+    document.querySelectorAll('.vkey').forEach(btn => {
+      btn.addEventListener('click', () => doManualMove(btn.dataset.face));
+    });
+
+    // Physical Keyboard Shortcuts (U,D,R,L,F,B,M,E,S + Shift for Prime, Space for Play/Pause, Arrows for Step)
+    window.addEventListener('keydown', e => {
+      if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+      const key = e.key.toUpperCase();
+      if (['U','D','R','L','F','B','M','E','S'].includes(key)) {
+        e.preventDefault();
+        doManualMove(key, e.shiftKey ? "'" : appState.modifier);
+      } else if (e.code === 'Space') {
+        e.preventDefault();
+        elBtnPlay.click();
+      } else if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        elBtnNext.click();
+      } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        elBtnPrev.click();
+      }
+    });
+
+    // Window Resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // =========================================================================
+    // 6. MAIN RENDER LOOP (Smooth Zero-Gravity Levitation & Particle Drift)
+    // =========================================================================
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const t = clock.getElapsedTime();
+
+      // Smooth zero-gravity bobbing & micro-floating when cube rests or pauses
+      const bobAmp = appState.isPlaying ? 0.05 : 0.14;
+      levitationRoot.position.y = Math.sin(t * 1.15) * bobAmp;
+      levitationRoot.rotation.z = Math.sin(t * 0.7) * (appState.isPlaying ? 0.01 : 0.035);
+      levitationRoot.rotation.x = Math.cos(t * 0.55) * (appState.isPlaying ? 0.01 : 0.025);
+
+      // Pulse glowing neon target cages
+      const glowPulse = 0.22 + 0.14 * Math.sin(t * 5.2);
+      const corePulse = 0.78 + 0.22 * Math.sin(t * 5.2);
+      for (const m of cubieMeshes) {
+        if (m.userData.neonCage.visible) {
+          m.userData.neonCage.userData.matGlow.opacity = glowPulse;
+          m.userData.neonCage.userData.matCore.opacity = corePulse;
+        }
+      }
+
+      // Antigravity Particle Drift
+      starDust.rotation.y = t * 0.015;
+      glowMotes.rotation.y = -t * 0.028;
+      const posAttr = glowMotes.geometry.attributes.position;
+      const seeds = glowMotes.userData.seeds;
+      for (let i = 0; i < posAttr.count; i++) {
+        const phase = seeds[i * 3];
+        const speed = seeds[i * 3 + 1];
+        const baseY = seeds[i * 3 + 2];
+        posAttr.setY(i, baseY + Math.sin(t * speed + phase) * 0.35);
+      }
+      posAttr.needsUpdate = true;
+
+      // Subtle holographic ring pulse
+      ring1.material.opacity = 0.13 + 0.07 * Math.sin(t * 1.4);
+      ring2.material.opacity = 0.10 + 0.06 * Math.cos(t * 1.1);
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    // Initialize initial solved cube & HUD
+    syncMeshesToState(appState.cube);
+    renderHUD();
+    animate();
+  })();
+  </script>
+</body>
+</html>
